@@ -117,3 +117,45 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.db
+*.log
+
+# Eclipse
+.classpath
+.project
+.settings/
+# IntelliJ IDEA
+.idea/
+*.iml
+# VS Code
+.vscode/
+
+# Spring Boot
+target/
+# Maven
+/.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+*.swp
