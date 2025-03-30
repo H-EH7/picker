@@ -1,0 +1,33 @@
+logging:
+  level:
+    picker.picker_backend: debug
+
+spring:
+  application:
+    name: picker-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/picker_db?serverTimezone=UTC&characterEncoding=UTF-8
+    username: picker
+    password: picker
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  mybatis:
+    mapper-locations: classpath:mapper/**/*.xml
+    type-aliases-package: picker.picker_backend.model.entity
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: test-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

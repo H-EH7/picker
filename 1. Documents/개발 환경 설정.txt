@@ -1,0 +1,13 @@
+[Front-End]
+- Flutter
+Version: 3.29.2-stable
+
+
+[Back-End]
+
+- Java (JDK)
+https://adoptium.net/download/
+Version: 21.0.6+7
+
+- Spring Boot
+Version: 3.4.4
