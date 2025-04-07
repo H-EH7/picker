@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:picker_frontend/models/common/user.dart';
-
+import '../../../models/common/user.dart';
 
 class UserProfile extends StatelessWidget {
   const UserProfile({

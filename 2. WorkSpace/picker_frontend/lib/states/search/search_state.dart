@@ -47,23 +47,7 @@ class SearchState extends ChangeNotifier{
 // }
 
 
-class UserProfile extends StatelessWidget {
-  const UserProfile({
-    super.key,
-    required this.user,
-  });
 
-  final User user;
-
-  @override
-    Widget build(BuildContext context) {
-    // return  Text(user.name);
-       return SizedBox(
-      width:double.infinity,
-      child: Text(user.name)
-      );
-  }
-} 
 class SearchList extends StatefulWidget{
   const SearchList({super.key});
 
@@ -83,11 +67,4 @@ class _SearchList extends State<SearchList> {
     );
   }
   
-}
-
-class User {
-  final String name;
-  final String id;
-
-  User({required this.name, required this.id});
 }
