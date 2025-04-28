@@ -1,4 +1,4 @@
-package picker.picker_backend.model.vo;
+package picker.picker_backend.test.model.vo;
 
 import lombok.Getter;
 

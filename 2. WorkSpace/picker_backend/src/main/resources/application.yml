@@ -31,3 +31,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+# DM 환경 변수
+dm:
+  server-id: ${DM_SERVER_ID:dm-server-default}
+  kafka:
+    topic: ${DM_KAFKA_TOPIC:dm-topic}
+    group-id: ${DM_KAFKA_GROUP_ID:dm-group}

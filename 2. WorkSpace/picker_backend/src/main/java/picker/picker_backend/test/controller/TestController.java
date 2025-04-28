@@ -1,10 +1,10 @@
-package picker.picker_backend.controller;
+package picker.picker_backend.test.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import picker.picker_backend.model.dto.TestResponseDto;
-import picker.picker_backend.service.test.TestService;
+import picker.picker_backend.test.model.dto.TestResponseDto;
+import picker.picker_backend.test.service.TestService;
 
 @RestController
 @RequestMapping("/test")

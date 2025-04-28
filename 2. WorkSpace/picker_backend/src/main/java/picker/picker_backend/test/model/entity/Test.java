@@ -1,4 +1,4 @@
-package picker.picker_backend.model.entity;
+package picker.picker_backend.test.model.entity;
 
 import lombok.Getter;
 import lombok.Setter;
