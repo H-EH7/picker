@@ -1,4 +1,4 @@
-package picker.picker_backend.dm.component;
+package picker.picker_backend.dm.config;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +15,7 @@ public class DMProperties {
 
     @Getter
     @Setter
-    static class Kafka {
+    public static class Kafka {
         private String topic;
         private String groupId;
     }

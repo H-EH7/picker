@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import picker.picker_backend.dm.config.DMProperties;
 import picker.picker_backend.dm.model.dto.DMDto;
 
 @Component
@@ -12,12 +13,14 @@ import picker.picker_backend.dm.model.dto.DMDto;
 public class DMKafkaProducer {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final DMProperties properties;
 
-    private final static String TOPIC = "dm-topic";
-    private final static String GROUP_ID = "dm-group";
-
-    public void send(DMDto dm) throws JsonProcessingException {
-        String json = objectMapper.writeValueAsString(dm);
-        kafkaTemplate.send(TOPIC, json);
+    public void send(DMDto dm) {
+        try {
+            String json = objectMapper.writeValueAsString(dm);
+            kafkaTemplate.send(properties.getKafka().getTopic(), json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
