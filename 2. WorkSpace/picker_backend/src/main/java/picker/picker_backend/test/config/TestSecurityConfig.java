@@ -1,4 +1,4 @@
-package picker.picker_backend.config;
+package picker.picker_backend.test.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

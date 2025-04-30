@@ -7,7 +7,7 @@ spring:
     name: picker-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/picker_db?serverTimezone=UTC&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3307/picker_db?serverTimezone=UTC&characterEncoding=UTF-8
     username: picker
     password: picker
     driver-class-name: com.mysql.cj.jdbc.Driver

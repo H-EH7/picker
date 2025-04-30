@@ -1,4 +1,4 @@
-package picker.picker_backend.service.test;
+package picker.picker_backend.test.test;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,9 +8,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import picker.picker_backend.mapper.TestMapper;
-import picker.picker_backend.model.dto.TestResponseDto;
-import picker.picker_backend.model.entity.Test;
+import picker.picker_backend.test.mapper.TestMapper;
+import picker.picker_backend.test.model.dto.TestResponseDto;
+import picker.picker_backend.test.entity.Test;
 
 @Service
 @RequiredArgsConstructor

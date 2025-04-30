@@ -1,7 +1,7 @@
-package picker.picker_backend.service.test;
+package picker.picker_backend.test.test;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import picker.picker_backend.model.dto.TestResponseDto;
+import picker.picker_backend.test.model.dto.TestResponseDto;
 
 public interface TestService {
     /// Mapper 테스트 ======================================

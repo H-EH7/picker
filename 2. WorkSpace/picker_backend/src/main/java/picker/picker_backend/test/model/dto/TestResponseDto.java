@@ -1,4 +1,4 @@
-package picker.picker_backend.model.dto;
+package picker.picker_backend.test.model.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
