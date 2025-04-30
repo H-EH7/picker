@@ -3,8 +3,15 @@ package picker.picker_backend.post.model.entity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Date;
+
 @Getter
 @Setter
 public class PostEntity {
     private String userId;
+    private long postId;
+    private String postText;
+    private Date createdAt;
+    private Date updatedAt;
+    private boolean isDeleted;
 }

@@ -1,6 +1,8 @@
 logging:
   level:
     picker.picker_backend: debug
+    org.mybatis.spring: DEBUG
+    org.apache.ibatis: DEBUG
 
 spring:
   application:
@@ -11,10 +13,6 @@ spring:
     username: picker
     password: picker
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  mybatis:
-    mapper-locations: classpath:mapper/**/*.xml
-    type-aliases-package: picker.picker_backend.model.entity
 
   data:
     redis:
@@ -31,3 +29,9 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

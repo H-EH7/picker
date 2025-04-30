@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="picker.picker_backend.post.mapper.PostMapper">
+    <select id="getPostById" parameterType="string" resultType="picker.picker_backend.post.model.entity.PostEntity">
+        SELECT * from picker_db.post
+        where user_id = #{userId}
+        and is_deleted = 0;
+    </select>
+
+    <insert id="insertPost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
+        INSERT INTO picker_db.post
+        (user_id, post_text)
+        VALUES(#{userId}, #{postText});
+    </insert>
+
+    <update id="updatePost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
+        UPDATE picker_db.post
+        SET post_text=#{postText}
+        WHERE post_id=#{postId}
+        and user_id=#{userId}
+        and is_deleted = 0;
+    </update>
+</mapper>

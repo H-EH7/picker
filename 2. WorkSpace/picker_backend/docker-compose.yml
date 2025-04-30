@@ -11,6 +11,7 @@ services:
       MYSQL_DATABASE: picker_db
       MYSQL_USER: picker
       MYSQL_PASSWORD: picker
+      TZ: Asia/Seoul
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
