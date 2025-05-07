@@ -8,7 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import picker.picker_backend.post.model.dto.PostInsertDTO;
 import picker.picker_backend.post.model.dto.PostSelectDTO;
 import picker.picker_backend.post.model.dto.PostUpdateDTO;
-import picker.picker_backend.post.service.PostService;
+import picker.picker_backend.post.service.PostCommandService;
+import picker.picker_backend.post.service.PostQueryService;
 
 import java.util.List;
 
@@ -18,12 +19,15 @@ import java.util.List;
 public class PostController {
 
     @Autowired
-    private PostService postService;
+    private PostCommandService postCommandService;
+
+    @Autowired
+    private PostQueryService postQueryService;
 
     @GetMapping("/{userId}")
     public List<PostSelectDTO> getPostById(@PathVariable String userId){
 
-        return postService.getPostById(userId);
+        return postQueryService.getPostById(userId);
     }
 
     @PostMapping(value = "/insert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -31,12 +35,8 @@ public class PostController {
                           @RequestParam String postText,
                           @RequestParam(required = false) MultipartFile file){
 
-        PostInsertDTO postInsertDTO = new PostInsertDTO(userId,postText);
-        if(file != null && file.isEmpty()){
-            String fileName = file.getOriginalFilename();
-        }
 
-        return postService.insertPost(postInsertDTO);
+        return 0;
     }
 
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -45,8 +45,7 @@ public class PostController {
                           @RequestParam long postId,
                           @RequestParam(required = false) MultipartFile file){
 
-        PostUpdateDTO postUpdateDTO = new PostUpdateDTO(userId,postText,postId);
 
-        return postService.updatePost(postUpdateDTO);
+        return 0;
     }
 }

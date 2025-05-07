@@ -22,7 +22,6 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: test-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -35,3 +34,12 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+# post 설정
+
+post:
+  kafka:
+    topic: ${POST_KAFKA_TOPIC:post-events}
+    groupId: ${POST_KAFKA_GROUPID:post-group}
+    maxRetries : ${POST_KAFKA_MAXRETRIES:3}

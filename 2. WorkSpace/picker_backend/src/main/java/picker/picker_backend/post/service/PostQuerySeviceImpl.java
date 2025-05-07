@@ -5,18 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import picker.picker_backend.post.mapper.PostMapper;
-import picker.picker_backend.post.model.dto.PostInsertDTO;
 import picker.picker_backend.post.model.dto.PostSelectDTO;
-import picker.picker_backend.post.model.dto.PostUpdateDTO;
 import picker.picker_backend.post.model.entity.PostEntity;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl implements PostService{
+public class PostQuerySeviceImpl implements  PostQueryService{
 
     @Autowired
     private PostMapper postMapper;
@@ -50,60 +49,4 @@ public class PostServiceImpl implements PostService{
             throw new RuntimeException(e);
         }
     }
-
-    @Override
-    public int insertPost(PostInsertDTO postInsertDTO){
-
-        try{
-            PostEntity postEntity = postInsertDTO.toEntity();
-
-            int postInsertResult = postMapper.insertPost(postEntity);
-
-            if(postInsertResult == 0){
-                return 0;
-            }
-
-            return postInsertResult;
-
-        } catch (RuntimeException e) {
-
-            log.error("Error",e);
-
-            throw e;
-
-        } catch (Exception e) {
-
-            log.error("Error",e);
-
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public int updatePost(PostUpdateDTO postUpdateDTO){
-        try{
-            PostEntity postEntity = postUpdateDTO.toEntity();
-
-            int postUpdateResult = postMapper.updatePost(postEntity);
-
-            if(postUpdateResult == 0){
-                return 0;
-            }
-
-            return postUpdateResult;
-
-        } catch (RuntimeException e) {
-
-            log.error("Error",e);
-
-            throw e;
-
-        } catch (Exception e) {
-
-            log.error("Error",e);
-
-            throw new RuntimeException(e);
-        }
-    }
-
 }

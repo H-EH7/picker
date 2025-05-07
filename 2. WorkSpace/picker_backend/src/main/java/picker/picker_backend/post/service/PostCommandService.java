@@ -6,9 +6,8 @@ import picker.picker_backend.post.model.dto.PostUpdateDTO;
 
 import java.util.List;
 
-public interface PostService {
+public interface PostCommandService {
 
-    List<PostSelectDTO> getPostById(String userId);
     int insertPost(PostInsertDTO postInsertDTO);
     int updatePost(PostUpdateDTO postUpdateDTO);
 }
