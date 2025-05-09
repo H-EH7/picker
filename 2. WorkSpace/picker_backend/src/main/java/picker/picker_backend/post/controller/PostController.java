@@ -5,10 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import picker.picker_backend.post.model.dto.PostInsertDTO;
 import picker.picker_backend.post.model.dto.PostSelectDTO;
-import picker.picker_backend.post.model.dto.PostUpdateDTO;
-import picker.picker_backend.post.service.PostCommandService;
+import picker.picker_backend.post.service.PostClientService;
 import picker.picker_backend.post.service.PostQueryService;
 
 import java.util.List;
@@ -19,7 +17,7 @@ import java.util.List;
 public class PostController {
 
     @Autowired
-    private PostCommandService postCommandService;
+    private PostClientService postClientService;
 
     @Autowired
     private PostQueryService postQueryService;

@@ -1,45 +1,46 @@
 package picker.picker_backend.post.kafka.producer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import picker.picker_backend.post.config.PostProperties;
 import picker.picker_backend.post.model.dto.PostInsertDTO;
 import picker.picker_backend.post.model.dto.PostUpdateDTO;
+import picker.picker_backend.post.service.PostDLQService;
 
 import java.util.concurrent.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class PostEventProducer extends RetryProducer{
+public class PostEventProducer{
 
-    private final KafkaTemplate<String, PostInsertDTO> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
     private final PostProperties postProperties;
-    private final ExecutorService executorService = new ThreadPoolExecutor(
-            3,
-            10,
-            60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<Runnable>(100)
-    );
+    private final ObjectMapper objectMapper;
+    private final PostDLQService postDLQService;
 
-    private <T> void sendEventAsync(T postDTO, String eventType, CompletableFuture<Integer> resultFuture){
-        executorService.submit(()->{
-           int result = retrySendMessage(postDTO, eventType, 1);
-           resultFuture.complete(result);
-        });
+    public void sendPostEvent(Object postDTO, String eventType){
 
-    }
+        String topic = postProperties.getKafka().getTopic();
+        String jsonPostDTO = null;
 
-    public CompletableFuture<Integer> sendPostInsertEvent(PostInsertDTO postInsertDTO){
-        CompletableFuture<Integer> resultFuture = new CompletableFuture<>();
-        sendEventAsync(postInsertDTO, "insert", resultFuture);
-        return resultFuture;
-    }
+        try{
 
-    public CompletableFuture<Integer> sendPostUpdateEvent(PostUpdateDTO postUpdateDTO){
-        CompletableFuture<Integer> resultFuture = new CompletableFuture<>();
-        sendEventAsync(postUpdateDTO, "update", resultFuture);
-        return resultFuture;
+            jsonPostDTO = objectMapper.writeValueAsString(postDTO);
+            kafkaTemplate.send(topic, eventType, jsonPostDTO);
+
+        } catch (Exception e) {
+            if(jsonPostDTO != null){
+                log.error("Kafka Producer fail", e);
+                postDLQService.sendToDLQ(eventType, jsonPostDTO);
+            }else{
+                log.error("Producer DTO to json Fail", e);
+            }
+        }
     }
 
 }

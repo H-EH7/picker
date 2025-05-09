@@ -26,6 +26,9 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
+      retries: 3
+      retry-back-off-ms: 1000
+      acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
@@ -42,4 +45,3 @@ post:
   kafka:
     topic: ${POST_KAFKA_TOPIC:post-events}
     groupId: ${POST_KAFKA_GROUPID:post-group}
-    maxRetries : ${POST_KAFKA_MAXRETRIES:3}
