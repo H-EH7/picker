@@ -8,6 +8,7 @@ class PickerBackendApplicationTests {
 
 	@Test
 	void contextLoads() {
+		return true;
 	}
 
 }
