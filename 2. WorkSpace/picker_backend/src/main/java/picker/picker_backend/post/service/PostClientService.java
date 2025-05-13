@@ -1,10 +1,11 @@
 package picker.picker_backend.post.service;
 
-import picker.picker_backend.post.model.dto.PostInsertDTO;
-import picker.picker_backend.post.model.dto.PostUpdateDTO;
+import picker.picker_backend.post.factory.PostApiResponseWrapper;
+import picker.picker_backend.post.model.dto.*;
 
 public interface PostClientService {
 
-    boolean insertPost(PostInsertDTO postInsertDTO);
-    boolean updatePost(PostUpdateDTO postUpdateDTO);
+    PostApiResponseWrapper<PostResponseDTO> insertPost(PostInsertRequestDTO postInsertRequestDTO);
+    PostApiResponseWrapper<PostResponseDTO> updatePost(PostUpdateRequestDTO postUpdateRequestDTO);
+    PostApiResponseWrapper<PostResponseDTO> deletePost(PostDeleteRequestDTO postDeleteRequestDTO);
 }

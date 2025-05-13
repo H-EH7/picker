@@ -18,7 +18,6 @@ public class PostProperties {
     public static class Kafka{
         private String topic;
         private String groupId;
-        private int maxRetries;
     }
 
 }

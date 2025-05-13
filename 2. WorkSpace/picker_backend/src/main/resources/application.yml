@@ -13,6 +13,8 @@ spring:
     username: picker
     password: picker
     driver-class-name: com.mysql.cj.jdbc.Driver
+    initialization-mode: always
+    schema: classpath:mapper/test/schema.sql
 
   data:
     redis:
@@ -26,9 +28,6 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
-      retries: 3
-      retry-back-off-ms: 1000
-      acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 

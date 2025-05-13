@@ -14,4 +14,6 @@ public class PostEntity {
     private Date createdAt;
     private Date updatedAt;
     private boolean isDeleted;
+    private String tempId;
+    private String filePath;
 }

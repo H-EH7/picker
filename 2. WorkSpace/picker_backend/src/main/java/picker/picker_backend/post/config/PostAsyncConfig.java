@@ -1,4 +1,4 @@
-package picker.picker_backend.config;
+package picker.picker_backend.post.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 @EnableAsync
-public class AsyncConfig {
+public class PostAsyncConfig {
 
     @Bean(name = "postExecutor")
     public Executor postExecutor(){
@@ -30,10 +30,12 @@ public class AsyncConfig {
     @Bean(name = "postDLQExecutor")
     public Executor postDLQExecutor(){
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("PostDLQAsync-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
         executor.initialize();
 

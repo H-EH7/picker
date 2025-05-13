@@ -1,60 +1,30 @@
 package picker.picker_backend.post.kafka.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import picker.picker_backend.post.model.dto.PostInsertDTO;
-import picker.picker_backend.post.model.dto.PostUpdateDTO;
-import picker.picker_backend.post.service.PostDBService;
-import picker.picker_backend.post.service.PostDLQService;
-
-import java.util.concurrent.CompletableFuture;
+import picker.picker_backend.post.component.handler.PostKafkaConsumerHandler;
+import picker.picker_backend.post.postenum.PostEventType;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PostEventConsumer {
 
-    private final PostDBService postDBService;
-    private final ObjectMapper objectMapper;
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final PostDLQService postDLQService;
+    private final PostKafkaConsumerHandler postKafkaConsumerHandler;
 
     @KafkaListener(topics = "post-events", groupId = "post-group")
     public void receivePostEvent(ConsumerRecord<String, String> record){
         String eventType = record.key();
         String message = record.value();
-
         try {
-            CompletableFuture<Void> future = null;
-            switch (eventType){
-                case "insert" :
-                    PostInsertDTO postInsertDTO = objectMapper.readValue(message, PostInsertDTO.class);
-                    future = postDBService.postDBInsert(postInsertDTO);
-                    future.whenComplete((result, exception) -> {
-                        if(exception != null){
-                           log.error("DB fail consumer", exception);
-                           postDLQService.sendToDLQ(eventType,message);
-                        }
-                    });
-                    break;
-                case "update" :
-                    PostUpdateDTO postUpdateDTO = objectMapper.readValue(message, PostUpdateDTO.class);
-                    future = postDBService.postDBUpdate(postUpdateDTO);
-                    future.whenComplete((result, exception) -> {
-                        if(exception != null){
-                            log.error("DB fail consumer", exception);
-                            postDLQService.sendToDLQ(eventType,message);
-                        }
-                    });
-                    break;
-                default:
-                    log.error("Unknown Type {}", eventType);
-            }
+
+            postKafkaConsumerHandler.postConsumerEvent(
+                    PostEventType.valueOf(eventType.toUpperCase()),
+                    message
+            );
 
         }catch (Exception e){
             log.error("kafka consumer fail", e);

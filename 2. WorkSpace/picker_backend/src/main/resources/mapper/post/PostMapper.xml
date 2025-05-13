@@ -12,8 +12,8 @@
 
     <insert id="insertPost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
         INSERT INTO picker_db.post
-        (user_id, post_text)
-        VALUES(#{userId}, #{postText});
+        (user_id, post_text, temp_id)
+        VALUES(#{userId}, #{postText}, #{tempId});
     </insert>
 
     <update id="updatePost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
@@ -23,4 +23,11 @@
         and user_id=#{userId}
         and is_deleted = 0;
     </update>
+
+    <delete id="deletePost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
+        UPDATE picker_db.post
+        SET is_deleted=1
+        WHERE post_id=#{postId}
+        and user_id=#{userId}
+    </delete>
 </mapper>

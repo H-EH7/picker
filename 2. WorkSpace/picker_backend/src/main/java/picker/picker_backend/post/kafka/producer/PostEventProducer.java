@@ -1,42 +1,41 @@
 package picker.picker_backend.post.kafka.producer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import picker.picker_backend.post.component.manger.PostKafkaProducerManager;
 import picker.picker_backend.post.config.PostProperties;
-import picker.picker_backend.post.model.dto.PostInsertDTO;
-import picker.picker_backend.post.model.dto.PostUpdateDTO;
-import picker.picker_backend.post.service.PostDLQService;
-
-import java.util.concurrent.*;
+import picker.picker_backend.post.component.manger.PostDLQManager;
+import picker.picker_backend.post.postenum.PostEventType;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
 public class PostEventProducer{
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final PostKafkaProducerManager postKafkaProducerManager;
+    private final PostDLQManager postDLQManager;
     private final PostProperties postProperties;
-    private final ObjectMapper objectMapper;
-    private final PostDLQService postDLQService;
 
-    public void sendPostEvent(Object postDTO, String eventType){
+
+    public void sendPostEvent(Object postDTO, PostEventType eventType){
 
         String topic = postProperties.getKafka().getTopic();
         String jsonPostDTO = null;
 
         try{
 
-            jsonPostDTO = objectMapper.writeValueAsString(postDTO);
-            kafkaTemplate.send(topic, eventType, jsonPostDTO);
+            jsonPostDTO = postKafkaProducerManager.postConvertToJson(postDTO);
+
+            postKafkaProducerManager.postSendMessage(topic, eventType, jsonPostDTO);
 
         } catch (Exception e) {
+
             if(jsonPostDTO != null){
                 log.error("Kafka Producer fail", e);
-                postDLQService.sendToDLQ(eventType, jsonPostDTO);
+
+                postDLQManager.postSendToDLQ(eventType, jsonPostDTO);
+
             }else{
                 log.error("Producer DTO to json Fail", e);
             }
