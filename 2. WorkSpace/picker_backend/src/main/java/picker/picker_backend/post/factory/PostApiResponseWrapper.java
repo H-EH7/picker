@@ -21,4 +21,9 @@ public class PostApiResponseWrapper<T> {
     public static <T> PostApiResponseWrapper<T> fail(T data, String message){
         return  new PostApiResponseWrapper<>(false, data, message);
     }
+
+    public static <T> PostApiResponseWrapper<T> processing(T data, String message){
+        return  new PostApiResponseWrapper<>(true, data, message);
+    }
+
 }

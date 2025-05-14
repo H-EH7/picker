@@ -42,4 +42,34 @@ public class PostAsyncConfig {
         return  executor;
     }
 
+    @Bean(name = "postRedisStatusExecutor")
+    public Executor postRedisStatusExecutor(){
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("PostDLQAsync-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        executor.initialize();
+
+        return  executor;
+    }
+
+    @Bean(name = "postRedisViewCountExecutor")
+    public Executor postRedisViewCountExecutor(){
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("PostDLQAsync-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        executor.initialize();
+
+        return  executor;
+    }
+
 }

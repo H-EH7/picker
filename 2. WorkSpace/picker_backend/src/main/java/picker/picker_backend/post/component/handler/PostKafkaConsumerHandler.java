@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.manger.PostDBManager;
 import picker.picker_backend.post.component.manger.PostDLQManager;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
+import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.model.dto.PostDeleteRequestDTO;
 import picker.picker_backend.post.model.dto.PostInsertRequestDTO;
 import picker.picker_backend.post.model.dto.PostUpdateRequestDTO;
@@ -16,6 +17,7 @@ import picker.picker_backend.post.postenum.PostStatus;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Slf4j
 @Component
@@ -26,6 +28,7 @@ public class PostKafkaConsumerHandler {
     private final ObjectMapper objectMapper;
     private final PostDLQManager postDLQManager;
     private final PostRedisStatusManager postRedisStatusManager;
+    private final PostRedisViewCountManager postRedisViewCountManager;
 
     public void postConsumerEvent(PostEventType eventType, String message){
 
@@ -44,92 +47,71 @@ public class PostKafkaConsumerHandler {
             PostEventType.DELETE, this::handleDeleteEvent
     );
 
-    private void handleInsertEvent(String message){
+    private <T> void processEvent(String message,
+                                  Class<T> dtoClass,
+                                  Function<T, CompletableFuture<?>> dbFunction,
+                                  PostEventType eventType){
         try{
-
-            PostInsertRequestDTO postInsertRequestDTO = objectMapper.readValue(message, PostInsertRequestDTO.class);
-            CompletableFuture<Void> future = postDBManager.postDBInsert(postInsertRequestDTO);
+            T eventDTO = objectMapper.readValue(message, dtoClass);
+            CompletableFuture<?> future = dbFunction.apply(eventDTO);
             future.whenComplete((result, exception) -> {
-                if(exception != null){
-                    log.error("DB fail consumer", exception);
-
-                    postDLQManager.postSendToDLQ(PostEventType.INSERT, message);
-
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.INSERT,
-                            postInsertRequestDTO.getTempId(),
-                            PostStatus.DLQ_PROCESSING
-                    );
-
-                }else{
-
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.INSERT,
-                            postInsertRequestDTO.getTempId(),
-                            PostStatus.SUCCESS
-                    );
-                }
+               if(exception != null){
+                   handleFailure(eventType,message,exception,eventDTO);
+               }else{
+                   handleSuccess(eventType, result, eventDTO);
+               }
             });
+
         }catch (Exception e){
-            log.error("post insert error", e);
+            log.error("{} eventProcessing Error ", eventType, e);
         }
+
+    }
+
+    private void handleInsertEvent(String message){
+        processEvent(message,
+                PostInsertRequestDTO.class,
+                postDBManager::postDBInsert,
+                PostEventType.INSERT);
     }
 
     private void handleUpdateEvent(String message){
-        try{
-            PostUpdateRequestDTO postUpdateRequestDTO = objectMapper.readValue(message, PostUpdateRequestDTO.class);
-            CompletableFuture<Void> future = postDBManager.postDBUpdate(postUpdateRequestDTO);
-            future.whenComplete((result, exception) -> {
-                if(exception != null){
-                    log.error("DB fail consumer", exception);
-
-                    postDLQManager.postSendToDLQ(PostEventType.UPDATE, message);
-
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.UPDATE,
-                            postUpdateRequestDTO.getTempId()
-                            ,PostStatus.DLQ_PROCESSING
-                    );
-
-                }else{
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.UPDATE,
-                            postUpdateRequestDTO.getTempId(),
-                            PostStatus.SUCCESS
-                    );
-                }
-            });
-        }catch (Exception e){
-            log.error("post update error", e);
-        }
+        processEvent(message,
+                PostUpdateRequestDTO.class,
+                postDBManager::postDBUpdate,
+                PostEventType.UPDATE);
     }
 
     private void handleDeleteEvent(String message){
-        try{
-            PostDeleteRequestDTO postDeleteRequestDTO = objectMapper.readValue(message, PostDeleteRequestDTO.class);
-            CompletableFuture<Void> future = postDBManager.postDBDelete(postDeleteRequestDTO);
-            future.whenComplete((result, exception) -> {
-                if(exception != null){
-                    log.error("DB fail consumer", exception);
+        processEvent(message,
+                PostDeleteRequestDTO.class,
+                postDBManager::postDBDelete,
+                PostEventType.DELETE);
+    }
 
-                    postDLQManager.postSendToDLQ(PostEventType.DELETE, message);
+    private void handleFailure(PostEventType eventType, String message, Throwable exception, Object eventDTO){
+        log.error(eventType.name() + " Send To DLQ");
+        postDLQManager.postSendToDLQ(eventType,message);
+        postRedisStatusManager.setStatusWithTimestamp(eventType,  getTempId(eventDTO), PostStatus.DLQ_PROCESSING);
+    }
 
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.DELETE,
-                            postDeleteRequestDTO.getTempId()
-                            ,PostStatus.DLQ_PROCESSING
-                    );
-
-                }else{
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.DELETE,
-                            postDeleteRequestDTO.getTempId(),
-                            PostStatus.SUCCESS
-                    );
-                }
-            });
-        }catch (Exception e){
-            log.error("post delete error", e);
+    private void handleSuccess(PostEventType eventType, Object result, Object eventDTO){
+        postRedisStatusManager.setStatusWithTimestamp(eventType, getTempId(eventDTO), PostStatus.SUCCESS);
+        if(eventType == PostEventType.INSERT){
+            postRedisViewCountManager.setViewCount((long)result);
+        } else if (eventType == PostEventType.DELETE) {
+            postRedisViewCountManager.deleteViewCount((long)result);
         }
+    }
+
+    private String getTempId(Object eventDTO){
+        if(eventDTO instanceof PostInsertRequestDTO){
+            return((PostInsertRequestDTO) eventDTO).getTempId();
+        }else if(eventDTO instanceof PostUpdateRequestDTO){
+            return ((PostUpdateRequestDTO)eventDTO).getTempId();
+        } else if (eventDTO instanceof PostDeleteRequestDTO) {
+            return (((PostDeleteRequestDTO) eventDTO).getTempId());
+        }
+        return null;
     }
 }

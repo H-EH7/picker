@@ -23,14 +23,16 @@ public class PostDBManager {
 
     @Async("postExecutor")
     @Transactional
-    public CompletableFuture<Void> postDBInsert(PostInsertRequestDTO postInsertRequestDTO) {
+    public CompletableFuture<Long> postDBInsert(PostInsertRequestDTO postInsertRequestDTO) {
         try{
 
             PostEntity postInsertEntity = PostModelMapperHelper.toEntity(postInsertRequestDTO);
 
             postMapper.insertPost(postInsertEntity);
 
-            return CompletableFuture.completedFuture(null);
+            long postId = postInsertEntity.getPostId();
+
+            return CompletableFuture.completedFuture(postId);
 
         } catch (Exception e) {
             log.error("DB insert fail", e);

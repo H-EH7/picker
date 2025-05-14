@@ -3,6 +3,7 @@ package picker.picker_backend.post.component.manger;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.postenum.PostEventType;
 import picker.picker_backend.post.postenum.PostStatus;
@@ -25,10 +26,12 @@ public class PostRedisStatusManager {
         return "post:" + postEventType + ":" + tempId;
     }
 
+    @Async("postRedisStatusExecutor")
     public void setStatus(PostEventType eventType, String tempId, PostStatus postStatus){
         redisTemplate.opsForHash().put(getPostRedisTempIdKey(eventType,tempId), "status", postStatus.name());
     }
 
+    @Async("postRedisStatusExecutor")
     public void setStatusWithTimestamp(PostEventType eventType, String tempId, PostStatus postStatus){
         try{
             redisTemplate.opsForHash().put(getPostRedisTempIdKey(eventType,tempId), "status", postStatus.name());
@@ -37,6 +40,11 @@ public class PostRedisStatusManager {
                     "updateAt",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             );
+
+            if(postStatus == PostStatus.SUCCESS){
+                setExpireTime(eventType, tempId);
+            }
+
         }catch (Exception e){
             log.error("Post Redis Status Error ", e);
         }
@@ -47,6 +55,7 @@ public class PostRedisStatusManager {
         return status != null ? PostStatus.valueOf(status) : null;
     }
 
+    @Async("postRedisStatusExecutor")
     public void setStatusMap(PostEventType eventType, String tempId, Map<String, String> postStatusMap){
         redisTemplate.opsForHash().putAll(getPostRedisTempIdKey(eventType, tempId), postStatusMap);
     }

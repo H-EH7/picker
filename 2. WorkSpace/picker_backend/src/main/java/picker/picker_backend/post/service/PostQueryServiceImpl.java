@@ -3,7 +3,9 @@ package picker.picker_backend.post.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.mapper.PostMapper;
 import picker.picker_backend.post.factory.PostApiResponseWrapper;
 import picker.picker_backend.post.model.dto.PostSelectDTO;
@@ -20,30 +22,32 @@ public class PostQueryServiceImpl implements  PostQueryService{
 
     @Autowired
     private PostMapper postMapper;
+    private final PostRedisViewCountManager postRedisViewCountManager;
 
     @Override
-    public PostApiResponseWrapper<List<PostSelectDTO>> getPostById(String userId){
+    public ResponseEntity<PostApiResponseWrapper<PostSelectDTO>> getPost(long postId) {
         try{
-            List<PostEntity> postEntities = postMapper.getPostById(userId);
+            PostEntity postEntity = postMapper.getPost(postId);
 
-            if(postEntities == null){
-                return null;
+            if(postEntity == null){
+                return ResponseEntity.status(404).body(
+                        PostApiResponseWrapper.fail(null, "Select Fail")
+                );
             }
 
-            return PostApiResponseWrapper.success(
-                    postEntities
-                            .stream()
-                            .map(
-                            postEntity -> new PostSelectDTO(
-                                    postEntity.getUserId(),
-                                    postEntity.getPostId(),
-                                    postEntity.getPostText(),
-                                    postEntity.getCreatedAt(),
-                                    postEntity.getUpdatedAt(),
-                                    postEntity.getTempId())
-                            )
-                            .collect(Collectors.toList()),
-                    "Select Success"
+            PostSelectDTO postSelectDTO = new PostSelectDTO(
+                    postEntity.getUserId(),
+                    postEntity.getPostId(),
+                    postEntity.getPostText(),
+                    postEntity.getCreatedAt(),
+                    postEntity.getUpdatedAt(),
+                    postEntity.getTempId()
+            );
+
+            postRedisViewCountManager.incrementViewCount(postEntity.getPostId());
+
+            return ResponseEntity.ok(
+                    PostApiResponseWrapper.success(postSelectDTO, "Select Success")
             );
 
         } catch (Exception e) {
@@ -52,6 +56,73 @@ public class PostQueryServiceImpl implements  PostQueryService{
 
             throw e;
 
+        }
+    }
+
+    @Override
+    public ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostById(String userId){
+        try{
+            List<PostEntity> postEntities = postMapper.getPostById(userId);
+
+            if(postEntities == null || postEntities.isEmpty()){
+                return ResponseEntity.status(404).body(
+                        PostApiResponseWrapper.fail(null, "Select Fail")
+                );
+            }
+
+            List<PostSelectDTO> postSelectDTOList = postEntities.stream().map(
+                    postEntity -> new PostSelectDTO(
+                            postEntity.getUserId(),
+                            postEntity.getPostId(),
+                            postEntity.getPostText(),
+                            postEntity.getCreatedAt(),
+                            postEntity.getUpdatedAt(),
+                            postEntity.getTempId()
+                    )).collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    PostApiResponseWrapper.success(postSelectDTOList, "Select Success")
+            );
+
+        } catch (Exception e) {
+
+            log.error("Error",e);
+
+            throw e;
+
+        }
+    }
+
+    @Override
+    public ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostLists() {
+        try {
+
+            List<PostEntity> postEntities = postMapper.getPostLists();
+
+            if(postEntities == null || postEntities.isEmpty()){
+                return ResponseEntity.status(404).body(
+                        PostApiResponseWrapper.fail(null, "Select Fail")
+                );
+            }
+
+            List<PostSelectDTO> postSelectDTOList = postEntities.stream().map(
+                    postEntity -> new PostSelectDTO(
+                            postEntity.getUserId(),
+                            postEntity.getPostId(),
+                            postEntity.getPostText(),
+                            postEntity.getCreatedAt(),
+                            postEntity.getUpdatedAt(),
+                            postEntity.getTempId()
+                    )).collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    PostApiResponseWrapper.success(postSelectDTOList, "Select Success")
+            );
+
+        } catch (Exception e) {
+
+            log.error("Error", e);
+            throw e;
         }
     }
 }

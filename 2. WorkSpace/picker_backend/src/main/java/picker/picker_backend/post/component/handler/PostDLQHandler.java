@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.manger.PostDBManager;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
+import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.model.dto.PostDeleteRequestDTO;
 import picker.picker_backend.post.model.dto.PostInsertRequestDTO;
 import picker.picker_backend.post.model.dto.PostUpdateRequestDTO;
@@ -23,6 +24,7 @@ public class PostDLQHandler {
     private final PostDBManager postDBManager;
     private final ObjectMapper objectMapper;
     private final PostRedisStatusManager postRedisStatusManager;
+    private final PostRedisViewCountManager postRedisViewCountManager;
 
     public void postDLQEvent(PostEventType eventType, String message){
 
@@ -45,7 +47,7 @@ public class PostDLQHandler {
         try{
 
             PostInsertRequestDTO postInsertRequestDTO = objectMapper.readValue(message, PostInsertRequestDTO.class);
-            CompletableFuture<Void> future = postDBManager.postDBInsert(postInsertRequestDTO);
+            CompletableFuture<Long> future = postDBManager.postDBInsert(postInsertRequestDTO);
             future.whenComplete((result, exception) -> {
                 if(exception != null){
                     log.error("DB fail DLQ", exception);
@@ -62,6 +64,9 @@ public class PostDLQHandler {
                             postInsertRequestDTO.getTempId(),
                             PostStatus.SUCCESS
                     );
+
+                    postRedisViewCountManager.setViewCount(result);
+
                 }
             });
 
@@ -118,6 +123,8 @@ public class PostDLQHandler {
                             postDeleteRequestDTO.getTempId(),
                             PostStatus.SUCCESS
                     );
+
+
                 }
             });
 

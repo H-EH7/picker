@@ -9,11 +9,12 @@ import java.sql.Date;
 @Setter
 public class PostEntity {
     private String userId;
-    private long postId;
+    private Long postId;
     private String postText;
     private Date createdAt;
     private Date updatedAt;
     private boolean isDeleted;
     private String tempId;
     private String filePath;
+    private int viewCount;
 }

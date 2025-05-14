@@ -2,6 +2,7 @@ package picker.picker_backend.post.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import picker.picker_backend.post.component.helper.PostRedisHashMapHelper;
 import picker.picker_backend.post.factory.PostApiResponseFactory;
@@ -25,7 +26,7 @@ public class PostClientServiceImpl implements PostClientService {
     private final PostApiResponseFactory postApiResponseFactory;
 
     @Override
-    public PostApiResponseWrapper<PostResponseDTO> insertPost(PostInsertRequestDTO postInsertRequestDTO){
+    public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> insertPost(PostInsertRequestDTO postInsertRequestDTO){
         try{
 
             postRedisStatusManager.setStatusMap(
@@ -36,14 +37,9 @@ public class PostClientServiceImpl implements PostClientService {
 
             postEventProducer.sendPostEvent(postInsertRequestDTO, PostEventType.INSERT);
 
-            PostStatus postStatus = postRedisStatusManager.getStatus(PostEventType.INSERT, postInsertRequestDTO.getTempId());
-
-            if(postStatus == PostStatus.SUCCESS){
-                postRedisStatusManager.setExpireTime(PostEventType.INSERT, postInsertRequestDTO.getTempId());
-            }
-
-            return postApiResponseFactory.buildResponse(postInsertRequestDTO.getTempId(),
-                    postStatus,
+            return postApiResponseFactory.buildResponse(
+                    postInsertRequestDTO.getTempId(),
+                    PostStatus.PROCESSING,
                     PostEventType.INSERT
             );
 
@@ -63,7 +59,7 @@ public class PostClientServiceImpl implements PostClientService {
     }
 
     @Override
-    public PostApiResponseWrapper<PostResponseDTO> updatePost(PostUpdateRequestDTO postUpdateRequestDTO){
+    public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> updatePost(PostUpdateRequestDTO postUpdateRequestDTO){
         try{
 
             postRedisStatusManager.setStatusMap(
@@ -74,15 +70,9 @@ public class PostClientServiceImpl implements PostClientService {
 
             postEventProducer.sendPostEvent(postUpdateRequestDTO, PostEventType.UPDATE);
 
-            PostStatus postStatus = postRedisStatusManager.getStatus(PostEventType.UPDATE, postUpdateRequestDTO.getTempId());
-
-            if(postStatus == PostStatus.SUCCESS){
-                postRedisStatusManager.setExpireTime(PostEventType.UPDATE, postUpdateRequestDTO.getTempId());
-            }
-
             return postApiResponseFactory.buildResponse(
                     postUpdateRequestDTO.getTempId(),
-                    postStatus,
+                    PostStatus.PROCESSING,
                     PostEventType.UPDATE
             );
 
@@ -102,7 +92,7 @@ public class PostClientServiceImpl implements PostClientService {
     }
 
     @Override
-    public PostApiResponseWrapper<PostResponseDTO> deletePost(PostDeleteRequestDTO postDeleteRequestDTO){
+    public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> deletePost(PostDeleteRequestDTO postDeleteRequestDTO){
         try{
             postRedisStatusManager.setStatusMap(
                     PostEventType.DELETE,
@@ -112,15 +102,9 @@ public class PostClientServiceImpl implements PostClientService {
 
             postEventProducer.sendPostEvent(postDeleteRequestDTO, PostEventType.DELETE);
 
-            PostStatus postStatus = postRedisStatusManager.getStatus(PostEventType.DELETE, postDeleteRequestDTO.getTempId());
-
-            if(postStatus == PostStatus.SUCCESS){
-                postRedisStatusManager.setExpireTime(PostEventType.DELETE, postDeleteRequestDTO.getTempId());
-            }
-
             return postApiResponseFactory.buildResponse(
                     postDeleteRequestDTO.getTempId(),
-                    postStatus,
+                    PostStatus.PROCESSING,
                     PostEventType.DELETE
             );
 

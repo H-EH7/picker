@@ -1,6 +1,8 @@
 package picker.picker_backend.post.redis;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
 import picker.picker_backend.post.factory.PostApiResponseFactory;
@@ -17,13 +19,9 @@ public class PostRedisServiceImpl implements PostRedisService{
     private final PostApiResponseFactory postApiResponseFactory;
 
     @Override
-    public PostApiResponseWrapper<PostResponseDTO> getPostStatus(String tempId, String eventType){
+    public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> getPostStatus(String tempId, String eventType){
 
         PostStatus postStatus = postRedisStatusManager.getStatus(PostEventType.valueOf(eventType.toUpperCase()), tempId);
-
-        if(postStatus == PostStatus.SUCCESS){
-            postRedisStatusManager.setExpireTime(PostEventType.valueOf(eventType.toUpperCase()), tempId);
-        }
 
         return postApiResponseFactory.buildResponse(
                 tempId,
