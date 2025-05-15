@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.handler.PostKafkaConsumerHandler;
-import picker.picker_backend.post.postenum.PostEventType;
+import picker.picker_backend.post.postenum.EventType;
 
 @Slf4j
 @Component
@@ -15,17 +15,36 @@ public class PostEventConsumer {
 
     private final PostKafkaConsumerHandler postKafkaConsumerHandler;
 
-    @KafkaListener(topics = "post-events", groupId = "post-group")
+    @KafkaListener(topics = "${post.kafka.topic.post}", groupId = "${post.kafka.groupId}")
     public void receivePostEvent(ConsumerRecord<String, String> record){
         String eventType = record.key();
         String message = record.value();
+        String topic = record.topic();
         try {
 
             postKafkaConsumerHandler.postConsumerEvent(
-                    PostEventType.valueOf(eventType.toUpperCase()),
+                    topic,
+                    EventType.valueOf(eventType.toUpperCase()),
                     message
             );
 
+        }catch (Exception e){
+            log.error("kafka consumer fail", e);
+        }
+    }
+
+    @KafkaListener(topics = "${post.kafka.topic.reply}", groupId = "${post.kafka.groupId}")
+    public void receiveReplyEvent(ConsumerRecord<String, String> record){
+        String eventType = record.key();
+        String message = record.value();
+        String topic = record.topic();
+        try {
+
+            postKafkaConsumerHandler.postConsumerEvent(
+                    topic,
+                    EventType.valueOf(eventType.toUpperCase()),
+                    message
+            );
         }catch (Exception e){
             log.error("kafka consumer fail", e);
         }

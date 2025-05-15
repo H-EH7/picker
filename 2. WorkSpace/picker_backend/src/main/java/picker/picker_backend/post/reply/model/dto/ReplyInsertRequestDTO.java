@@ -1,17 +1,20 @@
-package picker.picker_backend.post.model.dto;
+package picker.picker_backend.post.reply.model.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import picker.picker_backend.post.model.common.TempIdSupport;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PostUpdateRequestDTO implements TempIdSupport {
-    private long postId;
+public class ReplyInsertRequestDTO implements TempIdSupport {
     private String userId;
     private String postText;
     private String tempId;
+
 
     @Override
     public String getTempId(){

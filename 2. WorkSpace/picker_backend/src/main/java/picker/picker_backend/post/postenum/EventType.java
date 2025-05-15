@@ -1,6 +1,6 @@
 package picker.picker_backend.post.postenum;
 
-public enum PostEventType {
+public enum EventType {
     INSERT,
     UPDATE,
     DELETE

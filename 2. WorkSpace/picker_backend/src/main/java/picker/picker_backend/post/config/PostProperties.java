@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @Component
@@ -16,7 +18,7 @@ public class PostProperties {
     @Getter
     @Setter
     public static class Kafka{
-        private String topic;
+        private Map<String, String> topic;
         private String groupId;
     }
 

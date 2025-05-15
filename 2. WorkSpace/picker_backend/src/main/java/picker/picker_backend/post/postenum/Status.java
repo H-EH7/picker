@@ -1,6 +1,6 @@
 package picker.picker_backend.post.postenum;
 
-public enum PostStatus {
+public enum Status {
     PROCESSING,
     SUCCESS,
     FAILED,

@@ -17,16 +17,29 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PostDBManager {
+public class PostDBManager implements DBManger{
 
     private final PostMapper postMapper;
+
+    @Override
+    public CompletableFuture<?> insert(Object dto) {
+        return postDBInsert((PostInsertRequestDTO) dto);
+    }
+    @Override
+    public CompletableFuture<?> update(Object dto){
+        return postDBUpdate((PostUpdateRequestDTO) dto);
+    }
+    @Override
+    public CompletableFuture<?> delete(Object dto){
+        return  postDBDelete((PostDeleteRequestDTO) dto);
+    }
 
     @Async("postExecutor")
     @Transactional
     public CompletableFuture<Long> postDBInsert(PostInsertRequestDTO postInsertRequestDTO) {
         try{
 
-            PostEntity postInsertEntity = PostModelMapperHelper.toEntity(postInsertRequestDTO);
+            PostEntity postInsertEntity = PostModelMapperHelper.postToEntity(postInsertRequestDTO);
 
             postMapper.insertPost(postInsertEntity);
 
@@ -45,7 +58,7 @@ public class PostDBManager {
     public CompletableFuture<Void> postDBUpdate(PostUpdateRequestDTO postUpdateRequestDTO) {
         try{
 
-            PostEntity postUpdateEntity = PostModelMapperHelper.toEntity(postUpdateRequestDTO);
+            PostEntity postUpdateEntity = PostModelMapperHelper.postToEntity(postUpdateRequestDTO);
 
             postMapper.updatePost(postUpdateEntity);
 
@@ -64,7 +77,7 @@ public class PostDBManager {
     public CompletableFuture<Void> postDBDelete(PostDeleteRequestDTO postDeleteRequestDTO) {
         try{
 
-            PostEntity postDeleteEntity = PostModelMapperHelper.toEntity(postDeleteRequestDTO);
+            PostEntity postDeleteEntity = PostModelMapperHelper.postToEntity(postDeleteRequestDTO);
 
             postMapper.deletePost(postDeleteEntity);
 

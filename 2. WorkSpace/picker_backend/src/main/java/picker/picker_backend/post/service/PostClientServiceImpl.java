@@ -5,15 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import picker.picker_backend.post.component.helper.PostRedisHashMapHelper;
+import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
 import picker.picker_backend.post.factory.PostApiResponseFactory;
 import picker.picker_backend.post.factory.PostApiResponseWrapper;
 import picker.picker_backend.post.model.dto.*;
-import picker.picker_backend.post.postenum.PostEventType;
+import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
 import picker.picker_backend.post.kafka.producer.PostEventProducer;
-import picker.picker_backend.post.postenum.PostStatus;
-
-import java.util.Map;
+import picker.picker_backend.post.postenum.Status;
+import picker.picker_backend.post.postenum.TopicKey;
 
 @Slf4j
 @Service
@@ -23,32 +23,35 @@ public class PostClientServiceImpl implements PostClientService {
     private final PostEventProducer postEventProducer;
     private final PostRedisHashMapHelper postRedisHashMapHelper;
     private final PostRedisStatusManager postRedisStatusManager;
-    private final PostApiResponseFactory postApiResponseFactory;
+    private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
 
     @Override
     public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> insertPost(PostInsertRequestDTO postInsertRequestDTO){
         try{
 
             postRedisStatusManager.setStatusMap(
-                    PostEventType.INSERT,
+                    EventType.INSERT,
                     postInsertRequestDTO.getTempId(),
-                    postRedisHashMapHelper.createRedisHashMap(postInsertRequestDTO, PostEventType.INSERT)
+                    postRedisHashMapHelper.createRedisHashMap(postInsertRequestDTO, EventType.INSERT),
+                    TopicKey.POST
             );
 
-            postEventProducer.sendPostEvent(postInsertRequestDTO, PostEventType.INSERT);
+            postEventProducer.sendPostEvent(postInsertRequestDTO, EventType.INSERT);
 
-            return postApiResponseFactory.buildResponse(
+            return PostApiResponseFactory.buildResponse(
                     postInsertRequestDTO.getTempId(),
-                    PostStatus.PROCESSING,
-                    PostEventType.INSERT
+                    Status.PROCESSING,
+                    EventType.INSERT,
+                    TopicKey.POST
             );
 
 
         } catch (Exception e) {
 
-            postRedisStatusManager.setStatusWithTimestamp(PostEventType.INSERT,
+            postRedisStatusManager.setStatusWithTimestamp(EventType.INSERT,
                     postInsertRequestDTO.getTempId(),
-                    PostStatus.FAILED
+                    Status.FAILED,
+                    postTopicKeyMapperHelper.getTopicName(TopicKey.POST)
             );
 
             log.error("Error",e);
@@ -63,25 +66,29 @@ public class PostClientServiceImpl implements PostClientService {
         try{
 
             postRedisStatusManager.setStatusMap(
-                    PostEventType.UPDATE,
+                    EventType.UPDATE,
                     postUpdateRequestDTO.getTempId(),
-                    postRedisHashMapHelper.createRedisHashMap(postUpdateRequestDTO, PostEventType.UPDATE)
+                    postRedisHashMapHelper.createRedisHashMap(postUpdateRequestDTO, EventType.UPDATE),
+                    TopicKey.POST
+
             );
 
-            postEventProducer.sendPostEvent(postUpdateRequestDTO, PostEventType.UPDATE);
+            postEventProducer.sendPostEvent(postUpdateRequestDTO, EventType.UPDATE);
 
-            return postApiResponseFactory.buildResponse(
+            return PostApiResponseFactory.buildResponse(
                     postUpdateRequestDTO.getTempId(),
-                    PostStatus.PROCESSING,
-                    PostEventType.UPDATE
+                    Status.PROCESSING,
+                    EventType.UPDATE,
+                    TopicKey.POST
             );
 
         } catch (Exception e) {
 
             postRedisStatusManager.setStatusWithTimestamp(
-                    PostEventType.UPDATE,
+                    EventType.UPDATE,
                     postUpdateRequestDTO.getTempId(),
-                    PostStatus.FAILED
+                    Status.FAILED,
+                    postTopicKeyMapperHelper.getTopicName(TopicKey.POST)
             );
 
             log.error("Error",e);
@@ -95,25 +102,28 @@ public class PostClientServiceImpl implements PostClientService {
     public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> deletePost(PostDeleteRequestDTO postDeleteRequestDTO){
         try{
             postRedisStatusManager.setStatusMap(
-                    PostEventType.DELETE,
+                    EventType.DELETE,
                     postDeleteRequestDTO.getTempId(),
-                    postRedisHashMapHelper.createRedisHashMap(postDeleteRequestDTO, PostEventType.DELETE)
+                    postRedisHashMapHelper.createRedisHashMap(postDeleteRequestDTO, EventType.DELETE),
+                    TopicKey.POST
             );
 
-            postEventProducer.sendPostEvent(postDeleteRequestDTO, PostEventType.DELETE);
+            postEventProducer.sendPostEvent(postDeleteRequestDTO, EventType.DELETE);
 
-            return postApiResponseFactory.buildResponse(
+            return PostApiResponseFactory.buildResponse(
                     postDeleteRequestDTO.getTempId(),
-                    PostStatus.PROCESSING,
-                    PostEventType.DELETE
+                    Status.PROCESSING,
+                    EventType.DELETE,
+                    TopicKey.POST
             );
 
         } catch (Exception e) {
 
             postRedisStatusManager.setStatusWithTimestamp(
-                    PostEventType.DELETE,
+                    EventType.DELETE,
                     postDeleteRequestDTO.getTempId(),
-                    PostStatus.FAILED
+                    Status.FAILED,
+                    postTopicKeyMapperHelper.getTopicName(TopicKey.POST)
             );
 
             log.error("Error",e);

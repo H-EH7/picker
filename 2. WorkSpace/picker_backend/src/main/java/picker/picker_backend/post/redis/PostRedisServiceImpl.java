@@ -1,32 +1,34 @@
 package picker.picker_backend.post.redis;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
 import picker.picker_backend.post.factory.PostApiResponseFactory;
 import picker.picker_backend.post.factory.PostApiResponseWrapper;
 import picker.picker_backend.post.model.dto.PostResponseDTO;
-import picker.picker_backend.post.postenum.PostEventType;
-import picker.picker_backend.post.postenum.PostStatus;
+import picker.picker_backend.post.postenum.EventType;
+import picker.picker_backend.post.postenum.Status;
+import picker.picker_backend.post.postenum.TopicKey;
 
 @Service
 @RequiredArgsConstructor
 public class PostRedisServiceImpl implements PostRedisService{
 
     private final PostRedisStatusManager postRedisStatusManager;
-    private final PostApiResponseFactory postApiResponseFactory;
+    private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
 
     @Override
     public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> getPostStatus(String tempId, String eventType){
 
-        PostStatus postStatus = postRedisStatusManager.getStatus(PostEventType.valueOf(eventType.toUpperCase()), tempId);
+        Status status = postRedisStatusManager.getStatus(EventType.valueOf(eventType.toUpperCase()), tempId, postTopicKeyMapperHelper.getTopicName(TopicKey.POST));
 
-        return postApiResponseFactory.buildResponse(
+        return PostApiResponseFactory.buildResponse(
                 tempId,
-                postStatus,
-                PostEventType.valueOf(eventType.toUpperCase())
+                status,
+                EventType.valueOf(eventType.toUpperCase()),
+                TopicKey.POST
         );
-    };
+    }
 }

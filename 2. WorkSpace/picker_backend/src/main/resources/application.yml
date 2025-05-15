@@ -42,5 +42,9 @@ mybatis:
 
 post:
   kafka:
-    topic: ${POST_KAFKA_TOPIC:post-events}
+    topic:
+      post: ${POST_KAFKA_TOPIC_POST:post-events}
+      postdlq: ${POST_KAFKA_TOPIC_POSTDLQ:post-dlq}
+      reply: ${POST_KAFKA_TOPIC_REPLY:reply-events}
+      replydlq: ${POST_KAFKA_TOPIC_REPLYDLQ:reply-dlq}
     groupId: ${POST_KAFKA_GROUPID:post-group}

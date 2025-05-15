@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="picker.picker_backend.post.mapper.PostMapper">
-    <select id="getPostLists" parameterType="string" resultType="picker.picker_backend.post.model.entity.PostEntity">
+    <select id="getPostLists" resultType="picker.picker_backend.post.model.entity.PostEntity">
         SELECT * from picker_db.post
         WHERE is_deleted = 0;
     </select>

@@ -10,12 +10,14 @@ import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.model.dto.PostDeleteRequestDTO;
 import picker.picker_backend.post.model.dto.PostInsertRequestDTO;
 import picker.picker_backend.post.model.dto.PostUpdateRequestDTO;
-import picker.picker_backend.post.postenum.PostEventType;
-import picker.picker_backend.post.postenum.PostStatus;
+import picker.picker_backend.post.postenum.EventType;
+import picker.picker_backend.post.postenum.Status;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Slf4j
 @Component
@@ -26,111 +28,89 @@ public class PostDLQHandler {
     private final PostRedisStatusManager postRedisStatusManager;
     private final PostRedisViewCountManager postRedisViewCountManager;
 
-    public void postDLQEvent(PostEventType eventType, String message){
+    public void postDLQEvent(EventType eventType, String message, String topic){
 
-        Consumer<String> postDLQHandler = eventTypeHandleMap.get(eventType);
+        BiConsumer<String, String> postDLQHandler = eventTypeHandleMap.get(eventType);
 
         if(postDLQHandler != null){
-            postDLQHandler.accept(message);
+            postDLQHandler.accept(message, topic);
         }else{
             log.error("Unknown Event Type : {} ",eventType);
         }
     }
 
-    private final Map<PostEventType, Consumer<String>> eventTypeHandleMap = Map.of(
-            PostEventType.INSERT, this::handleDLQInsertEvent,
-            PostEventType.UPDATE, this::handleDLQUpdateEvent,
-            PostEventType.DELETE, this::handleDLQDeleteEvent
+    private final Map<EventType, BiConsumer<String, String>> eventTypeHandleMap = Map.of(
+            EventType.INSERT, this::handleDLQInsertEvent,
+            EventType.UPDATE, this::handleDLQUpdateEvent,
+            EventType.DELETE, this::handleDLQDeleteEvent
     );
 
-    private void handleDLQInsertEvent(String message){
+    private <T> void processEvent(String message,
+                                  Class<T> dtoClass,
+                                  Function<T, CompletableFuture<?>> dbFunction,
+                                  EventType eventType,
+                                  String topic){
         try{
-
-            PostInsertRequestDTO postInsertRequestDTO = objectMapper.readValue(message, PostInsertRequestDTO.class);
-            CompletableFuture<Long> future = postDBManager.postDBInsert(postInsertRequestDTO);
+            T eventDTO = objectMapper.readValue(message, dtoClass);
+            CompletableFuture<?> future = dbFunction.apply(eventDTO);
             future.whenComplete((result, exception) -> {
                 if(exception != null){
-                    log.error("DB fail DLQ", exception);
-
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.INSERT,
-                            postInsertRequestDTO.getTempId(),
-                            PostStatus.DLQ_FAILED
-                    );
-
+                    dlqHandleFailure(eventType, exception, eventDTO, topic);
                 }else{
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.INSERT,
-                            postInsertRequestDTO.getTempId(),
-                            PostStatus.SUCCESS
-                    );
-
-                    postRedisViewCountManager.setViewCount(result);
-
+                    dlqHandleSuccess(eventType, result, eventDTO, topic);
                 }
             });
+        }catch (Exception e) {
+            log.error("{} eventProcessing Error ", eventType, e);
+        }
+    }
+    private void dlqHandleFailure(EventType eventType, Throwable exception, Object eventDTO, String topic){
+        log.error("{} DLQ Fail", eventType.name(), exception);
+        postRedisStatusManager.setStatusWithTimestamp(eventType, getTempId(eventDTO), Status.DLQ_FAILED, topic);
+    }
 
-        }catch (Exception e){
-            log.error("post DLQ insert error", e);
+    private void dlqHandleSuccess(EventType eventType, Object result, Object eventDTO, String topic){
+        postRedisStatusManager.setStatusWithTimestamp(eventType, getTempId(eventDTO), Status.SUCCESS, topic);
+        if(eventType == EventType.INSERT){
+            postRedisViewCountManager.setViewCount((long)result);
+        } else if (eventType == EventType.DELETE) {
+            postRedisViewCountManager.deleteViewCount((long)result);
         }
     }
 
-    private void handleDLQUpdateEvent(String message){
-        try{
-            PostUpdateRequestDTO postUpdateRequestDTO = objectMapper.readValue(message, PostUpdateRequestDTO.class);
-            CompletableFuture<Void> future = postDBManager.postDBUpdate(postUpdateRequestDTO);
-            future.whenComplete((result, exception) -> {
-                if(exception != null){
-                    log.error("DB fail DLQ", exception);
-
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.UPDATE,
-                            postUpdateRequestDTO.getTempId(),
-                            PostStatus.DLQ_FAILED
-                    );
-
-                }else{
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.UPDATE,
-                            postUpdateRequestDTO.getTempId(),
-                            PostStatus.SUCCESS
-                    );
-                }
-            });
-
-        }catch (Exception e){
-            log.error("post DLQ update error", e);
+    private String getTempId(Object eventDTO){
+        if(eventDTO instanceof PostInsertRequestDTO){
+            return((PostInsertRequestDTO) eventDTO).getTempId();
+        }else if(eventDTO instanceof PostUpdateRequestDTO){
+            return ((PostUpdateRequestDTO)eventDTO).getTempId();
+        } else if (eventDTO instanceof PostDeleteRequestDTO) {
+            return (((PostDeleteRequestDTO) eventDTO).getTempId());
         }
+        return null;
     }
 
-    private void handleDLQDeleteEvent(String message){
-        try{
-            PostDeleteRequestDTO postDeleteRequestDTO = objectMapper.readValue(message, PostDeleteRequestDTO.class);
-            CompletableFuture<Void> future = postDBManager.postDBDelete(postDeleteRequestDTO);
-            future.whenComplete((result, exception) -> {
-                if(exception != null){
-                    log.error("DB fail DLQ", exception);
+    private void handleDLQInsertEvent(String message, String topic){
+        processEvent(message,
+                PostInsertRequestDTO.class,
+                postDBManager::postDBInsert,
+                EventType.INSERT,
+                topic);
+    }
 
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.DELETE,
-                            postDeleteRequestDTO.getTempId(),
-                            PostStatus.DLQ_FAILED
-                    );
+    private void handleDLQUpdateEvent(String message,String topic){
+        processEvent(message,
+                PostUpdateRequestDTO.class,
+                postDBManager::postDBUpdate,
+                EventType.UPDATE,
+                topic);
+    }
 
-                }else{
-                    postRedisStatusManager.setStatusWithTimestamp(
-                            PostEventType.DELETE,
-                            postDeleteRequestDTO.getTempId(),
-                            PostStatus.SUCCESS
-                    );
-
-
-                }
-            });
-
-        }catch (Exception e){
-            log.error("post DLQ delete error", e);
-        }
+    private void handleDLQDeleteEvent(String message, String topic){
+        processEvent(message,
+                PostDeleteRequestDTO.class,
+                postDBManager::postDBDelete,
+                EventType.DELETE,
+                topic);
     }
 
 }

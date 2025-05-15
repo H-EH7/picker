@@ -1,4 +1,4 @@
-package picker.picker_backend.post.model.dto;
+package picker.picker_backend.post.reply.model.dto;
 
 
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import picker.picker_backend.post.model.common.TempIdSupport;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PostDeleteRequestDTO implements TempIdSupport {
+public class ReplyDeleteRequestDTO implements TempIdSupport {
     private String userId;
     private long postId;
     private String tempId;

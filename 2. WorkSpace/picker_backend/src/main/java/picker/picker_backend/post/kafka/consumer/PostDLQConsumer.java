@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.handler.PostDLQHandler;
-import picker.picker_backend.post.postenum.PostEventType;
+import picker.picker_backend.post.postenum.EventType;
 
 @Slf4j
 @Component
@@ -19,12 +19,15 @@ public class PostDLQConsumer {
     public void receiveDLQPostEvent(ConsumerRecord<String, String> record){
         String eventType = record.key();
         String message = record.value();
+        String topic = record.topic();
 
         try {
 
             postDLQHandler.postDLQEvent(
-                    PostEventType.valueOf(eventType.toUpperCase()),
-                    message
+                    EventType.valueOf(eventType.toUpperCase()),
+                    message,
+                    topic
+
             );
 
         }catch (Exception e){

@@ -1,21 +1,26 @@
 package picker.picker_backend.post.component.handler;
 
+import com.android.tools.r8.internal.Ex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import picker.picker_backend.post.component.helper.DBHandlerHelper;
+import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
 import picker.picker_backend.post.component.manger.PostDBManager;
 import picker.picker_backend.post.component.manger.PostDLQManager;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
 import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
+import picker.picker_backend.post.model.common.TempIdSupport;
 import picker.picker_backend.post.model.dto.PostDeleteRequestDTO;
 import picker.picker_backend.post.model.dto.PostInsertRequestDTO;
 import picker.picker_backend.post.model.dto.PostUpdateRequestDTO;
-import picker.picker_backend.post.postenum.PostEventType;
-import picker.picker_backend.post.postenum.PostStatus;
+import picker.picker_backend.post.postenum.EventType;
+import picker.picker_backend.post.postenum.Status;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,89 +34,58 @@ public class PostKafkaConsumerHandler {
     private final PostDLQManager postDLQManager;
     private final PostRedisStatusManager postRedisStatusManager;
     private final PostRedisViewCountManager postRedisViewCountManager;
+    private final DBHandlerHelper dbHandlerHelper;
+    private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
 
-    public void postConsumerEvent(PostEventType eventType, String message){
+    public void postConsumerEvent(String topic, EventType eventType, String message){
+        DBHandler dbHandler = dbHandlerHelper.getDBhandler(postTopicKeyMapperHelper.getTopicKey(topic).name());
 
-        Consumer<String> postConsumerHandler = eventTypeHandleMap.get(eventType);
 
-        if(postConsumerHandler != null){
-            postConsumerHandler.accept(message);
-        }else{
-            log.error("Unknown Event Type : {} ",eventType);
+        if(dbHandler == null){
+            log.error("Unknow topic : {}", topic);
+            return;
         }
-    }
 
-    private final Map<PostEventType, Consumer<String>> eventTypeHandleMap = Map.of(
-            PostEventType.INSERT, this::handleInsertEvent,
-            PostEventType.UPDATE, this::handleUpdateEvent,
-            PostEventType.DELETE, this::handleDeleteEvent
-    );
-
-    private <T> void processEvent(String message,
-                                  Class<T> dtoClass,
-                                  Function<T, CompletableFuture<?>> dbFunction,
-                                  PostEventType eventType){
         try{
-            T eventDTO = objectMapper.readValue(message, dtoClass);
-            CompletableFuture<?> future = dbFunction.apply(eventDTO);
-            future.whenComplete((result, exception) -> {
-               if(exception != null){
-                   handleFailure(eventType,message,exception,eventDTO);
-               }else{
-                   handleSuccess(eventType, result, eventDTO);
-               }
+            Class<?> dtoClass = dbHandler.getDtoClass(eventType);
+            Object dto =objectMapper.readValue(message, dtoClass);
+
+            CompletableFuture<?> future = switch (eventType){
+                case INSERT -> dbHandler.getDbManger().insert(dto);
+                case UPDATE -> dbHandler.getDbManger().update(dto);
+                case DELETE -> dbHandler.getDbManger().delete(dto);
+            };
+
+            future.whenComplete((result ,ex) ->{
+                if(ex != null){
+                    handleFailure(eventType, message, ex, dto, topic);
+                }else {
+                    handleSuccess(eventType, result, dto, topic);
+                }
             });
 
         }catch (Exception e){
-            log.error("{} eventProcessing Error ", eventType, e);
+            log.error("Failed consumer",e);
         }
 
     }
 
-    private void handleInsertEvent(String message){
-        processEvent(message,
-                PostInsertRequestDTO.class,
-                postDBManager::postDBInsert,
-                PostEventType.INSERT);
+    private void handleFailure(EventType eventType, String message, Throwable exception, Object eventDTO, String topic){
+        log.error("{} Send To DLQ", eventType.name(), exception);
+        postDLQManager.dlqConsumerEvent(topic,message,eventType);
+        String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
+        postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.DLQ_PROCESSING, topic);
     }
 
-    private void handleUpdateEvent(String message){
-        processEvent(message,
-                PostUpdateRequestDTO.class,
-                postDBManager::postDBUpdate,
-                PostEventType.UPDATE);
-    }
-
-    private void handleDeleteEvent(String message){
-        processEvent(message,
-                PostDeleteRequestDTO.class,
-                postDBManager::postDBDelete,
-                PostEventType.DELETE);
-    }
-
-    private void handleFailure(PostEventType eventType, String message, Throwable exception, Object eventDTO){
-        log.error(eventType.name() + " Send To DLQ");
-        postDLQManager.postSendToDLQ(eventType,message);
-        postRedisStatusManager.setStatusWithTimestamp(eventType,  getTempId(eventDTO), PostStatus.DLQ_PROCESSING);
-    }
-
-    private void handleSuccess(PostEventType eventType, Object result, Object eventDTO){
-        postRedisStatusManager.setStatusWithTimestamp(eventType, getTempId(eventDTO), PostStatus.SUCCESS);
-        if(eventType == PostEventType.INSERT){
+    private void handleSuccess(EventType eventType, Object result, Object eventDTO, String topic){
+        String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
+        postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.SUCCESS,topic);
+        if(eventType == EventType.INSERT){
             postRedisViewCountManager.setViewCount((long)result);
-        } else if (eventType == PostEventType.DELETE) {
+        } else if (eventType == EventType.DELETE) {
             postRedisViewCountManager.deleteViewCount((long)result);
         }
     }
 
-    private String getTempId(Object eventDTO){
-        if(eventDTO instanceof PostInsertRequestDTO){
-            return((PostInsertRequestDTO) eventDTO).getTempId();
-        }else if(eventDTO instanceof PostUpdateRequestDTO){
-            return ((PostUpdateRequestDTO)eventDTO).getTempId();
-        } else if (eventDTO instanceof PostDeleteRequestDTO) {
-            return (((PostDeleteRequestDTO) eventDTO).getTempId());
-        }
-        return null;
-    }
+
 }

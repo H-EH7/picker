@@ -4,22 +4,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.model.dto.PostResponseDTO;
-import picker.picker_backend.post.postenum.PostEventType;
-import picker.picker_backend.post.postenum.PostStatus;
+import picker.picker_backend.post.postenum.EventType;
+import picker.picker_backend.post.postenum.Status;
+import picker.picker_backend.post.postenum.TopicKey;
 
 @Component
 public class PostApiResponseFactory {
 
-    public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> buildResponse(String tempId, PostStatus postStatus, PostEventType postEventType){
+    public static ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> buildResponse(String tempId, Status status, EventType eventType, TopicKey topicKey){
 
-        PostResponseDTO postResponseDTO = new PostResponseDTO(tempId, postStatus, postEventType);
-        String postResponseMessage = postEventType.name() + " " + postStatus.name();
+        PostResponseDTO postResponseDTO = new PostResponseDTO(tempId, status, eventType, topicKey);
+        String postResponseMessage = eventType.name() + " " + status.name();
 
-        if(postStatus == PostStatus.SUCCESS){
+        if(status == Status.SUCCESS){
             return ResponseEntity.ok(PostApiResponseWrapper.success(postResponseDTO,postResponseMessage));
         }
 
-        if(postStatus == PostStatus.FAILED || postStatus == PostStatus.DLQ_FAILED){
+        if(status == Status.FAILED || status == Status.DLQ_FAILED){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(PostApiResponseWrapper.fail(postResponseDTO,postResponseMessage));
         }
 

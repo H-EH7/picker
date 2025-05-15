@@ -2,7 +2,6 @@ package picker.picker_backend.post.schedular;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.executor.BatchResult;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -12,7 +11,6 @@ import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.mapper.PostMapper;
 import picker.picker_backend.post.model.entity.PostEntity;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -38,9 +36,9 @@ public class PostRedisViewCountSchedular {
 
             List<PostEntity> postEntityList = toPostEntity(redisViewCount);
 
-            int[] updateDBResult = updatePostViewCount(postEntityList);
+            boolean updateDBResult = updatePostViewCount(postEntityList);
 
-            if(updateDBResult.length > 0){
+            if(updateDBResult){
                 initPostViewCountRedis();
             }else{
                 log.error("batch error");
@@ -57,36 +55,30 @@ public class PostRedisViewCountSchedular {
         return postRedisViewCountManager.getAllPostViewCount();
     }
 
-    private int[] updatePostViewCount(List<PostEntity> redisViewCount){
-
-        try(SqlSession session = sqlSessionFactory.openSession(ExecutorType.BATCH, false);) {
+    private boolean updatePostViewCount(List<PostEntity> redisViewCount){
+        SqlSession session = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+        try {
             PostMapper postMapper = session.getMapper(PostMapper.class);
 
             for(int i = 0; i < redisViewCount.size(); i++){
                postMapper.updateViewCountBatch(redisViewCount.get(i));
 
                if((i+1)% BATCH_SIZE == 0 || i+1 == redisViewCount.size()){
-                   List<BatchResult> results = session.flushStatements();
-                   return mergeUpdateCounts(results);
+                   session.flushStatements();
                }
            }
+
            session.commit();
+
+            return true;
+
         }catch (Exception e){
-
+            session.rollback();
             log.error("batch error",e);
-
-            throw e;
+            return false;
+        }finally {
+            session.close();
         }
-
-            return new int[0];
-    }
-
-    private int[] mergeUpdateCounts(List<BatchResult> results){
-
-        return results
-                .stream()
-                .flatMapToInt(result -> Arrays.stream(result.getUpdateCounts()))
-                .toArray();
     }
 
     private List<PostEntity> toPostEntity(Map<Object, Object> redisList){
@@ -105,4 +97,5 @@ public class PostRedisViewCountSchedular {
 
             postRedisViewCountManager.initViewCount();
     }
+
 }

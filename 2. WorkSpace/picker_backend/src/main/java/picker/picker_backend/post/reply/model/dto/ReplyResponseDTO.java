@@ -1,4 +1,4 @@
-package picker.picker_backend.post.model.dto;
+package picker.picker_backend.post.reply.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,15 +6,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.postenum.Status;
-import picker.picker_backend.post.postenum.TopicKey;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponseDTO {
+public class ReplyResponseDTO {
     private String tempId;
     private Status status;
     private EventType eventType;
-    private TopicKey topicKey;
 }

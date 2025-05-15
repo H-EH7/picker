@@ -2,13 +2,10 @@ package picker.picker_backend.post.factory;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Setter
+
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor
 public class PostApiResponseWrapper<T> {
     private boolean success;
     private T data;
