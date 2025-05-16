@@ -1,13 +1,18 @@
 package picker.picker_backend.post.model.dto;
 
 import lombok.*;
+import picker.picker_backend.post.annotation.PostAnnotation;
 import picker.picker_backend.post.model.common.TempIdSupport;
+import picker.picker_backend.post.model.common.UserIdSupport;
+import picker.picker_backend.post.postenum.EventType;
+import picker.picker_backend.post.postenum.TopicKey;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PostUpdateRequestDTO implements TempIdSupport {
+@PostAnnotation(topicKey = TopicKey.POST, eventType = EventType.UPDATE)
+public class PostUpdateRequestDTO implements TempIdSupport, UserIdSupport {
     private long postId;
     private String userId;
     private String postText;
@@ -16,5 +21,10 @@ public class PostUpdateRequestDTO implements TempIdSupport {
     @Override
     public String getTempId(){
         return tempId;
+    }
+
+    @Override
+    public String getUserId() {
+        return userId;
     }
 }

@@ -4,21 +4,31 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import picker.picker_backend.post.annotation.PostAnnotation;
 import picker.picker_backend.post.model.common.TempIdSupport;
+import picker.picker_backend.post.model.common.UserIdSupport;
+import picker.picker_backend.post.postenum.EventType;
+import picker.picker_backend.post.postenum.TopicKey;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ReplyUpdateRequestDTO implements TempIdSupport {
-    private long postId;
+@PostAnnotation(topicKey = TopicKey.REPLY, eventType = EventType.UPDATE)
+public class ReplyUpdateRequestDTO implements TempIdSupport, UserIdSupport {
+    private Long postId;
     private String userId;
-    private String postText;
+    private long replyId;
+    private String replyText;
     private String tempId;
-
 
     @Override
     public String getTempId(){
         return tempId;
+    }
+
+    @Override
+    public String getUserId() {
+        return userId;
     }
 }

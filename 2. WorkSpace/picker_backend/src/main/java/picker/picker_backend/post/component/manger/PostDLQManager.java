@@ -3,16 +3,13 @@ package picker.picker_backend.post.component.manger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
-import picker.picker_backend.post.config.PostProperties;
 import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.postenum.TopicKey;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 @Slf4j
 @Component
@@ -20,7 +17,6 @@ import java.util.function.Consumer;
 public class PostDLQManager {
 
     private final KafkaTemplate<String, String > kafkaTemplate;
-    private final PostProperties postProperties;
     private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
 
     public void dlqConsumerEvent(String topic, String message, EventType eventType){
@@ -51,14 +47,12 @@ public class PostDLQManager {
         sendToDLQ(TopicKey.REPLYDLQ, eventType, message);
     }
 
-
     public void sendToDLQ(TopicKey topicKey, EventType eventType, String message){
 
-        String topic = postProperties.getKafka().getTopic().get(topicKey.name().toLowerCase());
-
+        String topicName = postTopicKeyMapperHelper.getTopicName(topicKey);
         try{
 
-            kafkaTemplate.send(topic, eventType.name(), message);
+            kafkaTemplate.send(topicName, eventType.name(), message);
 
         }catch (Exception e){
 

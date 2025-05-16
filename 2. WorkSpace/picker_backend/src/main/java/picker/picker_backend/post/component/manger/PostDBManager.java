@@ -11,20 +11,24 @@ import picker.picker_backend.post.model.dto.PostDeleteRequestDTO;
 import picker.picker_backend.post.model.dto.PostInsertRequestDTO;
 import picker.picker_backend.post.model.dto.PostUpdateRequestDTO;
 import picker.picker_backend.post.model.entity.PostEntity;
+import picker.picker_backend.post.postenum.TopicKey;
 
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PostDBManager implements DBManger{
+public class PostDBManager implements DBManger, TopicKeyProvider {
 
     private final PostMapper postMapper;
 
     @Override
-    public CompletableFuture<?> insert(Object dto) {
-        return postDBInsert((PostInsertRequestDTO) dto);
+    public TopicKey getTopicKey(){
+        return TopicKey.POST;
     }
+
+    @Override
+    public CompletableFuture<?> insert(Object dto) { return postDBInsert((PostInsertRequestDTO) dto); }
     @Override
     public CompletableFuture<?> update(Object dto){
         return postDBUpdate((PostUpdateRequestDTO) dto);
@@ -74,14 +78,16 @@ public class PostDBManager implements DBManger{
 
     @Async("postExecutor")
     @Transactional
-    public CompletableFuture<Void> postDBDelete(PostDeleteRequestDTO postDeleteRequestDTO) {
+    public CompletableFuture<Long> postDBDelete(PostDeleteRequestDTO postDeleteRequestDTO) {
         try{
 
             PostEntity postDeleteEntity = PostModelMapperHelper.postToEntity(postDeleteRequestDTO);
 
             postMapper.deletePost(postDeleteEntity);
 
-            return CompletableFuture.completedFuture(null);
+            long postId = postDeleteEntity.getPostId();
+
+            return CompletableFuture.completedFuture(postId);
 
         } catch (Exception e) {
 

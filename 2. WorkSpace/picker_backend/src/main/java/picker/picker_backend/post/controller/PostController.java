@@ -6,8 +6,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import picker.picker_backend.post.factory.PostApiResponseWrapper;
+import picker.picker_backend.post.likes.service.LikesRedisService;
 import picker.picker_backend.post.model.dto.*;
 import picker.picker_backend.post.redis.PostRedisService;
+import picker.picker_backend.post.reply.model.dto.ReplySelectDTO;
+import picker.picker_backend.post.reply.service.ReplyQueryService;
 import picker.picker_backend.post.service.PostClientService;
 import picker.picker_backend.post.service.PostQueryService;
 
@@ -27,6 +30,12 @@ public class PostController {
     @Autowired
     private PostRedisService postRedisService;
 
+    @Autowired
+    private ReplyQueryService replyQueryService;
+
+    @Autowired
+    private LikesRedisService likesRedisService;
+
     @GetMapping
     public ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostLists(){
 
@@ -34,11 +43,29 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostApiResponseWrapper<PostSelectDTO>> getPost(@PathVariable long postId){
+    public ResponseEntity<PostApiResponseWrapper<PostWithResponseDTO>> getPost(@PathVariable long postId){
 
-        return postQueryService.getPost(postId);
+        PostSelectDTO postData = postQueryService.getPost(postId);
+
+        if(postData != null){
+
+            List<ReplySelectDTO> replyData = replyQueryService.getPostWithResponse(postId);
+
+            long likesCount = likesRedisService.getLikesCount(postId);
+
+            PostWithResponseDTO postWithResponseDTO = new PostWithResponseDTO(
+                    postData,
+                    replyData,
+                    likesCount
+            );
+
+            return ResponseEntity.ok(PostApiResponseWrapper.success(postWithResponseDTO, "Post Select Success"));
+
+        }else{
+
+            return ResponseEntity.status(404).body(PostApiResponseWrapper.fail(null, "Post Select Failed"));
+        }
     }
-
 
     @GetMapping("/users/{userId}")
     public ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostById(@PathVariable String userId){
@@ -92,6 +119,4 @@ public class PostController {
                 .build()
         );
     }
-
-
 }

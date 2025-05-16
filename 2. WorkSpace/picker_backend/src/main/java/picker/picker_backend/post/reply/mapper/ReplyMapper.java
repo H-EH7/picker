@@ -1,7 +1,6 @@
 package picker.picker_backend.post.reply.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import picker.picker_backend.post.model.entity.PostEntity;
 import picker.picker_backend.post.reply.model.entity.ReplyEntity;
 
 import java.util.List;

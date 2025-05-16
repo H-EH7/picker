@@ -1,45 +1,36 @@
 package picker.picker_backend.post.component.handler;
 
-import com.android.tools.r8.internal.Ex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.helper.DBHandlerHelper;
 import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
-import picker.picker_backend.post.component.manger.PostDBManager;
 import picker.picker_backend.post.component.manger.PostDLQManager;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
 import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.model.common.TempIdSupport;
-import picker.picker_backend.post.model.dto.PostDeleteRequestDTO;
-import picker.picker_backend.post.model.dto.PostInsertRequestDTO;
-import picker.picker_backend.post.model.dto.PostUpdateRequestDTO;
 import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.postenum.Status;
+import picker.picker_backend.post.postenum.TopicKey;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PostKafkaConsumerHandler {
 
-    private final PostDBManager postDBManager;
     private final ObjectMapper objectMapper;
     private final PostDLQManager postDLQManager;
     private final PostRedisStatusManager postRedisStatusManager;
-    private final PostRedisViewCountManager postRedisViewCountManager;
     private final DBHandlerHelper dbHandlerHelper;
     private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
+    private final RedistEventHandler redistEventHandler;
 
     public void postConsumerEvent(String topic, EventType eventType, String message){
-        DBHandler dbHandler = dbHandlerHelper.getDBhandler(postTopicKeyMapperHelper.getTopicKey(topic).name());
 
+        DBHandler dbHandler = dbHandlerHelper.getDBhandler(postTopicKeyMapperHelper.getTopicKey(topic).name());
 
         if(dbHandler == null){
             log.error("Unknow topic : {}", topic);
@@ -80,11 +71,9 @@ public class PostKafkaConsumerHandler {
     private void handleSuccess(EventType eventType, Object result, Object eventDTO, String topic){
         String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
         postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.SUCCESS,topic);
-        if(eventType == EventType.INSERT){
-            postRedisViewCountManager.setViewCount((long)result);
-        } else if (eventType == EventType.DELETE) {
-            postRedisViewCountManager.deleteViewCount((long)result);
-        }
+
+        TopicKey topicKey = postTopicKeyMapperHelper.getTopicKey(topic);
+        redistEventHandler.handler(topicKey, eventType, (Long)result);
     }
 
 

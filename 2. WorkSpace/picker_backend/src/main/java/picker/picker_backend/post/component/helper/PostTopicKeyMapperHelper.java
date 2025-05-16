@@ -1,13 +1,14 @@
 package picker.picker_backend.post.component.helper;
 
 import jakarta.annotation.PostConstruct;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.config.PostProperties;
 import picker.picker_backend.post.postenum.TopicKey;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class PostTopicKeyMapperHelper {
@@ -39,5 +40,23 @@ public class PostTopicKeyMapperHelper {
 
     public TopicKey getTopicKey(String topicName){
         return  topicNameToKeyMap.get(topicName);
+    }
+
+    public TopicKey getDLQTopicKey(String topicName){
+
+        if(topicName == null) return null;
+
+        Pattern dlqPattern = Pattern.compile("^(.*)(DLQ)$",Pattern.CASE_INSENSITIVE);
+        Matcher matcher = dlqPattern.matcher(topicName);
+
+        if(matcher.matches()){
+            String baseTopic = matcher.group(1);
+            try{
+                return TopicKey.valueOf(baseTopic.toUpperCase());
+            }catch (Exception e){
+                return null;
+            }
+        }
+        return null;
     }
 }

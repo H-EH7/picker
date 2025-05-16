@@ -32,7 +32,7 @@ public class PostClientServiceImpl implements PostClientService {
             postRedisStatusManager.setStatusMap(
                     EventType.INSERT,
                     postInsertRequestDTO.getTempId(),
-                    postRedisHashMapHelper.createRedisHashMap(postInsertRequestDTO, EventType.INSERT),
+                    postRedisHashMapHelper.createRedisHashMap(EventType.INSERT,postInsertRequestDTO),
                     TopicKey.POST
             );
 
@@ -68,7 +68,7 @@ public class PostClientServiceImpl implements PostClientService {
             postRedisStatusManager.setStatusMap(
                     EventType.UPDATE,
                     postUpdateRequestDTO.getTempId(),
-                    postRedisHashMapHelper.createRedisHashMap(postUpdateRequestDTO, EventType.UPDATE),
+                    postRedisHashMapHelper.createRedisHashMap(EventType.UPDATE,postUpdateRequestDTO),
                     TopicKey.POST
 
             );
@@ -104,7 +104,7 @@ public class PostClientServiceImpl implements PostClientService {
             postRedisStatusManager.setStatusMap(
                     EventType.DELETE,
                     postDeleteRequestDTO.getTempId(),
-                    postRedisHashMapHelper.createRedisHashMap(postDeleteRequestDTO, EventType.DELETE),
+                    postRedisHashMapHelper.createRedisHashMap(EventType.DELETE,postDeleteRequestDTO),
                     TopicKey.POST
             );
 

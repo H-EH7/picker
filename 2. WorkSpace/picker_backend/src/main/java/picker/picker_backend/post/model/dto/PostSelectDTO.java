@@ -16,4 +16,5 @@ public class PostSelectDTO {
     private Date createdAt;
     private Date updatedAt;
     private String tempId;
+    private int viewCount;
 }

@@ -4,16 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import picker.picker_backend.post.factory.PostApiResponseWrapper;
-import picker.picker_backend.post.model.dto.PostSelectDTO;
-import picker.picker_backend.post.model.entity.PostEntity;
 import picker.picker_backend.post.reply.mapper.ReplyMapper;
 import picker.picker_backend.post.reply.model.dto.ReplySelectDTO;
 import picker.picker_backend.post.reply.model.entity.ReplyEntity;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,7 +20,7 @@ public class ReplyQueryServiceImpl implements ReplyQueryService{
     private final ReplyMapper replyMapper;
 
     @Override
-    public ResponseEntity<PostApiResponseWrapper<List<ReplySelectDTO>>> getReply(@PathVariable Long postId) {
+    public ResponseEntity<PostApiResponseWrapper<List<ReplySelectDTO>>> getReply(Long postId) {
         try{
             List<ReplyEntity> replyEntityList = replyMapper.getReply(postId);
 
@@ -57,4 +53,30 @@ public class ReplyQueryServiceImpl implements ReplyQueryService{
         }
     }
 
+    @Override
+    public List<ReplySelectDTO> getPostWithResponse(long postId) {
+
+        try{
+            List<ReplyEntity> replyEntityList = replyMapper.getReply(postId);
+
+            return replyEntityList.stream().map(
+                    replyEntity -> new ReplySelectDTO(
+                            replyEntity.getUserId(),
+                            replyEntity.getPostId(),
+                            replyEntity.getReplyId(),
+                            replyEntity.getParentReplyId(),
+                            replyEntity.getReplyText(),
+                            replyEntity.getCreatedAt(),
+                            replyEntity.getUpdatedAt(),
+                            replyEntity.getTempId()
+                    )).toList();
+
+        } catch (Exception e) {
+
+            log.error("Error",e);
+
+            throw e;
+
+        }
+    }
 }

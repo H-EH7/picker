@@ -31,4 +31,17 @@ public class PostRedisServiceImpl implements PostRedisService{
                 TopicKey.POST
         );
     }
+
+    @Override
+    public ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> getReplyStatus(String tempId, String eventType) {
+
+        Status status = postRedisStatusManager.getStatus(EventType.valueOf(eventType.toUpperCase()), tempId, postTopicKeyMapperHelper.getTopicName(TopicKey.REPLY));
+
+        return PostApiResponseFactory.buildResponse(
+                tempId,
+                status,
+                EventType.valueOf(eventType.toUpperCase()),
+                TopicKey.REPLY
+        );
+    }
 }

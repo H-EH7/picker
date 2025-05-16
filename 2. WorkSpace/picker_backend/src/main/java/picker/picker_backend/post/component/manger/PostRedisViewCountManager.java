@@ -15,10 +15,12 @@ import java.util.Map;
 public class PostRedisViewCountManager {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final PostRedisReplyCountManager postRedisReplyCountManager;
 
     @Async("postRedisViewCountExecutor")
     public void setViewCount(long postId) {
         redisTemplate.opsForHash().put("post:viewcount", String.valueOf(postId), "0");
+        postRedisReplyCountManager.setReplyCount(postId);
     }
 
     public int getViewCount(long postId) {
@@ -37,15 +39,14 @@ public class PostRedisViewCountManager {
 
     @Async("postRedisViewCountExecutor")
     public void deleteViewCount(long postId){
-        redisTemplate.opsForHash().delete("post:viewcount", postId);
+        redisTemplate.opsForHash().delete("post:viewcount", String.valueOf(postId));
+        redisTemplate.opsForHash().delete("post:replycount",String.valueOf(postId));
     }
 
     @Async("postRedisViewCountExecutor")
     public void initViewCount(){
         Map<String, String> updateAllViewCounts = new HashMap<>();
-        redisTemplate.opsForHash().entries("post:viewcount").forEach((key,value)->{
-            updateAllViewCounts.put((String) key, "0");
-        });
+        redisTemplate.opsForHash().entries("post:viewcount").forEach((key,value)-> updateAllViewCounts.put((String) key, "0"));
 
         redisTemplate.opsForHash().putAll("post:viewcount", updateAllViewCounts);
     }

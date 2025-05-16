@@ -1,10 +1,12 @@
 package picker.picker_backend.post.component.manger;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import picker.picker_backend.post.component.helper.PostModelMapperHelper;
+import picker.picker_backend.post.postenum.TopicKey;
 import picker.picker_backend.post.reply.mapper.ReplyMapper;
 import picker.picker_backend.post.reply.model.dto.ReplyDeleteRequestDTO;
 import picker.picker_backend.post.reply.model.dto.ReplyInsertRequestDTO;
@@ -15,26 +17,32 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Component
-public class ReplyDBManger implements DBManger{
+@RequiredArgsConstructor
+public class ReplyDBManger implements DBManger, TopicKeyProvider{
 
-    private ReplyMapper replyMapper;
+    @Override
+    public TopicKey getTopicKey() {
+        return TopicKey.REPLY;
+    }
+
+    private final ReplyMapper replyMapper;
 
     @Override
     public CompletableFuture<?> insert(Object dto) {
-        return postDBInsert((ReplyInsertRequestDTO) dto);
+        return replyDBInsert((ReplyInsertRequestDTO) dto);
     }
     @Override
     public CompletableFuture<?> update(Object dto){
-        return postDBUpdate((ReplyUpdateRequestDTO) dto);
+        return replyDBUpdate((ReplyUpdateRequestDTO) dto);
     }
     @Override
     public CompletableFuture<?> delete(Object dto){
-        return  postDBDelete((ReplyDeleteRequestDTO) dto);
+        return  replyDBDelete((ReplyDeleteRequestDTO) dto);
     }
 
-    @Async("postExecutor")
+    @Async("postReplyExecutor")
     @Transactional
-    public CompletableFuture<Long> postDBInsert(ReplyInsertRequestDTO replyInsertRequestDTO) {
+    public CompletableFuture<Long> replyDBInsert(ReplyInsertRequestDTO replyInsertRequestDTO) {
         try{
 
             ReplyEntity replyInsertEntity = PostModelMapperHelper.replyToEntity(replyInsertRequestDTO);
@@ -51,9 +59,9 @@ public class ReplyDBManger implements DBManger{
         }
     }
 
-    @Async("postExecutor")
+    @Async("postReplyExecutor")
     @Transactional
-    public CompletableFuture<Void> postDBUpdate(ReplyUpdateRequestDTO replyUpdateRequestDTO) {
+    public CompletableFuture<Void> replyDBUpdate(ReplyUpdateRequestDTO replyUpdateRequestDTO) {
         try{
 
             ReplyEntity replyUpdateEntity = PostModelMapperHelper.replyToEntity(replyUpdateRequestDTO);
@@ -70,16 +78,19 @@ public class ReplyDBManger implements DBManger{
         }
     }
 
-    @Async("postExecutor")
+    @Async("postReplyExecutor")
     @Transactional
-    public CompletableFuture<Void> postDBDelete(ReplyDeleteRequestDTO replyDeleteRequestDTO) {
+    public CompletableFuture<Long> replyDBDelete(ReplyDeleteRequestDTO replyDeleteRequestDTO) {
         try{
 
             ReplyEntity replyDeleteEntity = PostModelMapperHelper.replyToEntity(replyDeleteRequestDTO);
 
             replyMapper.deleteReply(replyDeleteEntity);
 
-            return CompletableFuture.completedFuture(null);
+            long postId = replyDeleteEntity.getPostId();
+
+
+            return CompletableFuture.completedFuture(postId);
 
         } catch (Exception e) {
 

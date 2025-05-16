@@ -10,6 +10,6 @@ public interface PostQueryService {
 
     ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostById(String userId);
     ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostLists();
-    ResponseEntity<PostApiResponseWrapper<PostSelectDTO>> getPost(long postId);
+    PostSelectDTO getPost(long postId);
 
 }

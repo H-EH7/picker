@@ -14,7 +14,7 @@ public class PostApiResponseFactory {
     public static ResponseEntity<PostApiResponseWrapper<PostResponseDTO>> buildResponse(String tempId, Status status, EventType eventType, TopicKey topicKey){
 
         PostResponseDTO postResponseDTO = new PostResponseDTO(tempId, status, eventType, topicKey);
-        String postResponseMessage = eventType.name() + " " + status.name();
+        String postResponseMessage = topicKey.name() + " " + eventType.name() + " " + status.name();
 
         if(status == Status.SUCCESS){
             return ResponseEntity.ok(PostApiResponseWrapper.success(postResponseDTO,postResponseMessage));

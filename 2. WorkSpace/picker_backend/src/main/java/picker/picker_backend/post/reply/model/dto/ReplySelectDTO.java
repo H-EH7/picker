@@ -13,7 +13,7 @@ public class ReplySelectDTO {
     private String userId;
     private long postId;
     private long replyId;
-    private long parentReplyId;
+    private Long parentReplyId;
     private String replyText;
     private Date createdAt;
     private Date updatedAt;

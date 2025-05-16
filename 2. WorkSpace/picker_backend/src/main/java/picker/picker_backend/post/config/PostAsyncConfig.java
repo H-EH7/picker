@@ -79,7 +79,7 @@ public class PostAsyncConfig {
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("PostreplyyAsync-");
+        executor.setThreadNamePrefix("PostReplyAsync-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
         executor.initialize();
@@ -87,4 +87,33 @@ public class PostAsyncConfig {
         return  executor;
     }
 
+    @Bean(name = "postRedisReplyCountExecutor")
+    public Executor postRedisReplyCountExecutor(){
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("PostReplyCountAsync-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        executor.initialize();
+
+        return  executor;
+    }
+
+    @Bean(name = "postRedisLikesExecutor")
+    public Executor postRedisLikesExecutor(){
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("PostRedisLikesAsync-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        executor.initialize();
+
+        return  executor;
+    }
 }

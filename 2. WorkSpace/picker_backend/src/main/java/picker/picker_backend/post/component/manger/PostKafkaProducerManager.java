@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
-import picker.picker_backend.post.config.PostProperties;
-import picker.picker_backend.post.kafka.producer.PostEventProducer;
 import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.postenum.TopicKey;
 

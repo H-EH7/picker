@@ -7,6 +7,32 @@
     <select id="getReply" parameterType="long" resultType="picker.picker_backend.post.reply.model.entity.ReplyEntity">
         SELECT * from picker_db.reply
         WHERE is_deleted = 0
-        AND post_id = #{postId};
+        AND post_id = #{postId}
+        ORDER BY updated_at ASC;
     </select>
+
+    <insert id="insertReply" parameterType="picker.picker_backend.post.reply.model.entity.ReplyEntity">
+        INSERT INTO picker_db.reply
+        ( post_id, user_id, reply_text, parent_reply_id, temp_id )
+        VALUES(#{postId}, #{userId}, #{replyText}, #{parentReplyId}, #{tempId});
+    </insert>
+
+    <update id="updateReply" parameterType="picker.picker_backend.post.reply.model.entity.ReplyEntity">
+        UPDATE picker_db.reply
+        SET reply_text=#{replyText},
+        temp_id=#{tempId}
+        WHERE post_id=#{postId}
+        AND reply_id=#{replyId}
+        AND user_id=#{userId}
+        AND is_deleted = 0;
+    </update>
+
+    <delete id="deleteReply" parameterType="picker.picker_backend.post.reply.model.entity.ReplyEntity">
+        UPDATE picker_db.reply
+        SET is_deleted=1,
+            temp_id=#{tempId}
+        WHERE post_id=#{postId}
+        AND user_id=#{userId}
+        AND reply_id=#{replyId}
+    </delete>
 </mapper>

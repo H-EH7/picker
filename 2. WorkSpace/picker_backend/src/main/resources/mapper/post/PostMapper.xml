@@ -6,19 +6,22 @@
 <mapper namespace="picker.picker_backend.post.mapper.PostMapper">
     <select id="getPostLists" resultType="picker.picker_backend.post.model.entity.PostEntity">
         SELECT * from picker_db.post
-        WHERE is_deleted = 0;
+        WHERE is_deleted = 0
+        ORDER BY updated_at DESC;
     </select>
 
     <select id="getPost" parameterType="Long" resultType="picker.picker_backend.post.model.entity.PostEntity">
         SELECT * from picker_db.post
         WHERE is_deleted = 0
-        AND post_id = #{postId};
+        AND post_id = #{postId}
+        ORDER BY updated_at DESC;
     </select>
 
     <select id="getPostById" parameterType="string" resultType="picker.picker_backend.post.model.entity.PostEntity">
         SELECT * from picker_db.post
-        where user_id = #{userId}
-        and is_deleted = 0;
+        WHERE user_id = #{userId}
+        AND is_deleted = 0
+        ORDER BY updated_at DESC;
     </select>
 
     <insert id="insertPost" parameterType="picker.picker_backend.post.model.entity.PostEntity" useGeneratedKeys="true" keyProperty="postId" keyColumn="post_id">
@@ -29,17 +32,19 @@
 
     <update id="updatePost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
         UPDATE picker_db.post
-        SET post_text=#{postText}
+        SET post_text=#{postText},
+            temp_id=#{tempId}
         WHERE post_id=#{postId}
-        and user_id=#{userId}
-        and is_deleted = 0;
+        AND user_id=#{userId}
+        AND is_deleted = 0;
     </update>
 
     <delete id="deletePost" parameterType="picker.picker_backend.post.model.entity.PostEntity">
         UPDATE picker_db.post
-        SET is_deleted=1
+        SET is_deleted=1,
+            temp_id=#{tempId}
         WHERE post_id=#{postId}
-        and user_id=#{userId}
+        AND user_id=#{userId}
     </delete>
 
     <update id="updateViewCountBatch" parameterType="picker.picker_backend.post.model.entity.PostEntity">

@@ -25,14 +25,12 @@ public class PostQueryServiceImpl implements  PostQueryService{
     private final PostRedisViewCountManager postRedisViewCountManager;
 
     @Override
-    public ResponseEntity<PostApiResponseWrapper<PostSelectDTO>> getPost(long postId) {
+    public PostSelectDTO getPost(long postId) {
         try{
             PostEntity postEntity = postMapper.getPost(postId);
 
             if(postEntity == null){
-                return ResponseEntity.status(404).body(
-                        PostApiResponseWrapper.fail(null, "Select Fail")
-                );
+                return null;
             }
 
             PostSelectDTO postSelectDTO = new PostSelectDTO(
@@ -41,14 +39,13 @@ public class PostQueryServiceImpl implements  PostQueryService{
                     postEntity.getPostText(),
                     postEntity.getCreatedAt(),
                     postEntity.getUpdatedAt(),
-                    postEntity.getTempId()
+                    postEntity.getTempId(),
+                    postEntity.getViewCount()
             );
 
             postRedisViewCountManager.incrementViewCount(postEntity.getPostId());
 
-            return ResponseEntity.ok(
-                    PostApiResponseWrapper.success(postSelectDTO, "Select Success")
-            );
+            return postSelectDTO;
 
         } catch (Exception e) {
 
@@ -77,7 +74,8 @@ public class PostQueryServiceImpl implements  PostQueryService{
                             postEntity.getPostText(),
                             postEntity.getCreatedAt(),
                             postEntity.getUpdatedAt(),
-                            postEntity.getTempId()
+                            postEntity.getTempId(),
+                            postEntity.getViewCount()
                     )).collect(Collectors.toList());
 
             return ResponseEntity.ok(
@@ -112,7 +110,8 @@ public class PostQueryServiceImpl implements  PostQueryService{
                             postEntity.getPostText(),
                             postEntity.getCreatedAt(),
                             postEntity.getUpdatedAt(),
-                            postEntity.getTempId()
+                            postEntity.getTempId(),
+                            postEntity.getViewCount()
                     )).collect(Collectors.toList());
 
             return ResponseEntity.ok(
