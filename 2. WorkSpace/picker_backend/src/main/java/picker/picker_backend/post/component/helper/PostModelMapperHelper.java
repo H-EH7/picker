@@ -3,6 +3,7 @@ package picker.picker_backend.post.component.helper;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.stereotype.Component;
+import picker.picker_backend.post.likes.model.entity.LikesEntity;
 import picker.picker_backend.post.model.entity.PostEntity;
 import picker.picker_backend.post.reply.model.entity.ReplyEntity;
 
@@ -21,6 +22,10 @@ public class PostModelMapperHelper {
 
     public static ReplyEntity replyToEntity(Object postDTO){
         return modelMapper.map(postDTO, ReplyEntity.class);
+    }
+
+    public static LikesEntity likesToEntity(Object postDTO){
+        return modelMapper.map(postDTO, LikesEntity.class);
     }
 
 

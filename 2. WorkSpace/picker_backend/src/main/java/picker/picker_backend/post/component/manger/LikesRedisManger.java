@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+
 @Component
 @AllArgsConstructor
 public class LikesRedisManger {
@@ -16,12 +17,12 @@ public class LikesRedisManger {
         return "post:likes:" + postId;
     }
 
-    @Async("postRedisLikesExecutor")
+    @Async("likesExecutor")
     public void addLikes(Long postId, String userId){
         redisTemplate.opsForSet().add(getLikeRedisKey(postId), userId);
     }
 
-    @Async("postRedisLikesExecutor")
+    @Async("likesExecutor")
     public void removeLikes(Long postId, String userId){
         redisTemplate.opsForSet().remove(getLikeRedisKey(postId),userId);
     }

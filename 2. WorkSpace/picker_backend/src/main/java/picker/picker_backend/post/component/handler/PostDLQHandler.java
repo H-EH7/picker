@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import picker.picker_backend.post.component.helper.DBHandlerHelper;
 import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
-import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.model.common.TempIdSupport;
 import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.postenum.Status;
@@ -20,10 +19,9 @@ import java.util.concurrent.CompletableFuture;
 public class PostDLQHandler {
     private final ObjectMapper objectMapper;
     private final PostRedisStatusManager postRedisStatusManager;
-    private final PostRedisViewCountManager postRedisViewCountManager;
     private final DBHandlerHelper dbHandlerHelper;
     private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
-    private final RedistEventHandler redistEventHandler;
+    private final RedisEventHandler redisEventHandler;
 
     public void postDLQEvent(EventType eventType, String message, String topic){
 
@@ -60,15 +58,18 @@ public class PostDLQHandler {
     private void dlqHandleFailure(EventType eventType, Throwable exception, Object eventDTO, String topic){
         log.error("{} DLQ Fail", eventType.name(), exception);
         String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
-        postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.DLQ_FAILED, topic);
+        if(tempId != null) {
+            postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.DLQ_FAILED, topic);
+        }
     }
 
     private void dlqHandleSuccess(EventType eventType, Object result, Object eventDTO, String topic){
         String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
-        postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.SUCCESS, topic);
-
         TopicKey topicKey = postTopicKeyMapperHelper.getDLQTopicKey(topic);
-        redistEventHandler.handler(topicKey, eventType, (Long)result);
+        if(tempId != null){
+            postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.SUCCESS, topic);
+        }
+        redisEventHandler.handler(topicKey, eventType, (Long)result);
     }
 
 }

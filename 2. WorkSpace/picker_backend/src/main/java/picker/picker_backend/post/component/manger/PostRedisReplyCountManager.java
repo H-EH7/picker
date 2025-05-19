@@ -14,7 +14,7 @@ import java.util.Map;
 public class PostRedisReplyCountManager {
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Async("postRedisReplyCountExecutor")
+    @Async("postReplyExecutor")
     public void setReplyCount(long postId) {
         redisTemplate.opsForHash().put("post:replycount", String.valueOf(postId), "0");
     }
@@ -24,7 +24,7 @@ public class PostRedisReplyCountManager {
         return viewCount != null ? Integer.parseInt(viewCount) : -1;
     }
 
-    @Async("postRedisReplyCountExecutor")
+    @Async("postReplyExecutor")
     public void incrementReplyCount(long postId) {
         redisTemplate.opsForHash().increment("post:replycount", String.valueOf(postId), 1);
     }
@@ -33,7 +33,7 @@ public class PostRedisReplyCountManager {
         return redisTemplate.opsForHash().entries("post:replycount");
     }
 
-    @Async("postRedisReplyCountExecutor")
+    @Async("postReplyExecutor")
     public void deleteReplyCount(long postId){
         redisTemplate.opsForHash().increment("post:replycount", String.valueOf(postId), -1);
     }

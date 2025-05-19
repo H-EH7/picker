@@ -50,4 +50,23 @@ public class PostEventConsumer {
         }
     }
 
+    @KafkaListener(topics = "${post.kafka.topic.likes}", groupId = "${post.kafka.groupId}")
+    public void receiveLikesEvent(ConsumerRecord<String, String> record){
+        String evenType = record.key();
+        String message = record.value();
+        String topic = record.topic();
+
+        try {
+            postKafkaConsumerHandler.postConsumerEvent(
+                    topic,
+                    EventType.valueOf(evenType.toUpperCase()),
+                    message
+            );
+
+        }catch (Exception e){
+            log.error("kafka consume fail", e);
+        }
+
+    }
+
 }

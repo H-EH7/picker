@@ -5,7 +5,7 @@ import picker.picker_backend.post.factory.PostApiResponseWrapper;
 import picker.picker_backend.post.likes.model.dto.LikesDeleteRequestDTO;
 import picker.picker_backend.post.likes.model.dto.LikesInsertRequestDTO;
 
-public interface LikesRedisService {
+public interface LikesClientService {
     ResponseEntity<PostApiResponseWrapper<LikesInsertRequestDTO>> insertLikes(LikesInsertRequestDTO likesInsertRequestDTO);
     ResponseEntity<PostApiResponseWrapper<LikesDeleteRequestDTO>> deleteLikes(LikesDeleteRequestDTO likesDeleteRequestDTO);
     long getLikesCount(long postId);

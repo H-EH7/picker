@@ -5,5 +5,6 @@ public enum TopicKey {
     POSTDLQ,
     REPLY,
     REPLYDLQ,
-    LIKES
+    LIKES,
+    LIKESDLQ
 }

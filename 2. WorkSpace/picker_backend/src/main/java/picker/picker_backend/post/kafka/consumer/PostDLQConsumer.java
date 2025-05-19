@@ -54,4 +54,25 @@ public class PostDLQConsumer {
             log.error("kafka DLQ consumer fail", e);
         }
     }
+
+    @KafkaListener(topics = "likes-dlq", groupId = "post-group")
+    public void receiveDLQLikesEvent(ConsumerRecord<String, String> record){
+        String eventType = record.key();
+        String message = record.value();
+        String topic = record.topic();
+
+        try {
+
+            postDLQHandler.postDLQEvent(
+                    EventType.valueOf(eventType.toUpperCase()),
+                    message,
+                    topic
+
+            );
+
+        }catch (Exception e){
+            log.error("kafka DLQ consumer fail", e);
+        }
+    }
+
 }

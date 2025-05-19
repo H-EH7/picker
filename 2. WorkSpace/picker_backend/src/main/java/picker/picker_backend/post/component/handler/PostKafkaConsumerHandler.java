@@ -8,7 +8,6 @@ import picker.picker_backend.post.component.helper.DBHandlerHelper;
 import picker.picker_backend.post.component.helper.PostTopicKeyMapperHelper;
 import picker.picker_backend.post.component.manger.PostDLQManager;
 import picker.picker_backend.post.component.manger.PostRedisStatusManager;
-import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
 import picker.picker_backend.post.model.common.TempIdSupport;
 import picker.picker_backend.post.postenum.EventType;
 import picker.picker_backend.post.postenum.Status;
@@ -26,7 +25,7 @@ public class PostKafkaConsumerHandler {
     private final PostRedisStatusManager postRedisStatusManager;
     private final DBHandlerHelper dbHandlerHelper;
     private final PostTopicKeyMapperHelper postTopicKeyMapperHelper;
-    private final RedistEventHandler redistEventHandler;
+    private final RedisEventHandler redisEventHandler;
 
     public void postConsumerEvent(String topic, EventType eventType, String message){
 
@@ -47,13 +46,14 @@ public class PostKafkaConsumerHandler {
                 case DELETE -> dbHandler.getDbManger().delete(dto);
             };
 
-            future.whenComplete((result ,ex) ->{
-                if(ex != null){
-                    handleFailure(eventType, message, ex, dto, topic);
-                }else {
-                    handleSuccess(eventType, result, dto, topic);
-                }
-            });
+                future.whenComplete((result ,ex) ->{
+                    if(ex != null){
+                        handleFailure(eventType, message, ex, dto, topic);
+                    }else {
+                        handleSuccess(eventType, result, dto, topic);
+                    }
+                });
+
 
         }catch (Exception e){
             log.error("Failed consumer",e);
@@ -65,16 +65,17 @@ public class PostKafkaConsumerHandler {
         log.error("{} Send To DLQ", eventType.name(), exception);
         postDLQManager.dlqConsumerEvent(topic,message,eventType);
         String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
-        postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.DLQ_PROCESSING, topic);
+        if(tempId != null){
+            postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.DLQ_PROCESSING, topic);
+        }
     }
 
     private void handleSuccess(EventType eventType, Object result, Object eventDTO, String topic){
         String tempId = (eventDTO instanceof TempIdSupport support) ? support.getTempId() : null;
-        postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.SUCCESS,topic);
-
         TopicKey topicKey = postTopicKeyMapperHelper.getTopicKey(topic);
-        redistEventHandler.handler(topicKey, eventType, (Long)result);
+        if(tempId != null){
+            postRedisStatusManager.setStatusWithTimestamp(eventType, tempId, Status.SUCCESS,topic);
+        }
+        redisEventHandler.handler(topicKey, eventType, (Long)result);
     }
-
-
 }

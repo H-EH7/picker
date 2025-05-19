@@ -7,36 +7,39 @@ import picker.picker_backend.post.factory.PostApiResponseWrapper;
 import picker.picker_backend.post.likes.model.dto.LikesDeleteRequestDTO;
 import picker.picker_backend.post.likes.model.dto.LikesInsertRequestDTO;
 import picker.picker_backend.post.likes.model.dto.LikesSelectDTO;
-import picker.picker_backend.post.likes.service.LikesRedisService;
+import picker.picker_backend.post.likes.service.LikesClientService;
+import picker.picker_backend.post.likes.service.LikesQueryService;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/posts/{postId}/likes")
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class LikesController {
 
+    private final LikesQueryService likesQueryService;
+    private final LikesClientService likesClientService;
 
-    private final LikesRedisService likesRedisService;
+    @GetMapping(path = "/{userId}/likes/users")
+    public ResponseEntity<PostApiResponseWrapper<List<LikesSelectDTO>>> getLikesByUserId(@PathVariable String userId){
 
-    @GetMapping
-    public ResponseEntity<PostApiResponseWrapper<LikesSelectDTO>> getLikes(@PathVariable Long postId){
-
-        return null;
+        return likesQueryService.getLikesByUserId(userId);
     }
 
-    @PostMapping("/insert")
+    @PostMapping("/{postId}/likes/insert")
     public ResponseEntity<PostApiResponseWrapper<LikesInsertRequestDTO>> insertLikes(@PathVariable Long postId, @RequestParam String userId){
 
-        return likesRedisService.insertLikes(LikesInsertRequestDTO.builder()
+        return likesClientService.insertLikes(LikesInsertRequestDTO.builder()
                 .postId(postId)
                 .userId(userId)
                 .build()
         );
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/{postId}/likes/delete")
     public ResponseEntity<PostApiResponseWrapper<LikesDeleteRequestDTO>> deleteLikes(@PathVariable Long postId, @RequestParam String userId){
 
-        return likesRedisService.deleteLikes(LikesDeleteRequestDTO.builder()
+        return likesClientService.deleteLikes(LikesDeleteRequestDTO.builder()
                 .postId(postId)
                 .userId(userId)
                 .build()

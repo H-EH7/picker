@@ -47,4 +47,13 @@ post:
       postdlq: ${POST_KAFKA_TOPIC_POSTDLQ:post-dlq}
       reply: ${POST_KAFKA_TOPIC_REPLY:reply-events}
       replydlq: ${POST_KAFKA_TOPIC_REPLYDLQ:reply-dlq}
+      likes: ${POST_KAFKA_TOPIC_LIKES:likes-events}
+      likesdlq: ${POST_KAFKA_TOPIC_LIKESDLQ:likes-dlq}
     groupId: ${POST_KAFKA_GROUPID:post-group}
+  popularity:
+    weights:
+      todayviews: 1.0
+      totalviews: 0.5
+      comments: 0.7
+      likes: 0.9
+    decaytimeunit: 45000.0

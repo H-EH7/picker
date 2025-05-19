@@ -6,7 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import picker.picker_backend.post.factory.PostApiResponseWrapper;
-import picker.picker_backend.post.likes.service.LikesRedisService;
+import picker.picker_backend.post.likes.service.LikesClientService;
 import picker.picker_backend.post.model.dto.*;
 import picker.picker_backend.post.redis.PostRedisService;
 import picker.picker_backend.post.reply.model.dto.ReplySelectDTO;
@@ -34,7 +34,7 @@ public class PostController {
     private ReplyQueryService replyQueryService;
 
     @Autowired
-    private LikesRedisService likesRedisService;
+    private LikesClientService likesClientService;
 
     @GetMapping
     public ResponseEntity<PostApiResponseWrapper<List<PostSelectDTO>>> getPostLists(){
@@ -51,7 +51,7 @@ public class PostController {
 
             List<ReplySelectDTO> replyData = replyQueryService.getPostWithResponse(postId);
 
-            long likesCount = likesRedisService.getLikesCount(postId);
+            long likesCount = likesClientService.getLikesCount(postId);
 
             PostWithResponseDTO postWithResponseDTO = new PostWithResponseDTO(
                     postData,

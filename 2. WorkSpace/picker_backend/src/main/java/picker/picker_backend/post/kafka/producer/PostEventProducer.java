@@ -15,13 +15,15 @@ public class PostEventProducer{
     private final PostKafkaProducerManager postKafkaProducerManager;
 
     public void sendPostEvent(Object postDTO, EventType eventType){
-
         postKafkaProducerManager.sendEvent(postDTO, eventType, TopicKey.POST);
-
     }
 
     public void sendReplyEvent(Object replyDTO, EventType eventType){
         postKafkaProducerManager.sendEvent(replyDTO, eventType,TopicKey.REPLY);
+    }
+
+    public void sendLikeEvent(Object likeDTO, EventType eventType){
+        postKafkaProducerManager.sendEvent(likeDTO, eventType, TopicKey.LIKES);
     }
 
 

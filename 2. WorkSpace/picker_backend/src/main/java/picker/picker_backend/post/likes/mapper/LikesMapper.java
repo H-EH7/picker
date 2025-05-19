@@ -7,8 +7,8 @@ import java.util.List;
 
 @Mapper
 public interface LikesMapper {
-    List<LikesEntity> getLikes(Long postId);
-    void insertReply(LikesEntity replyEntity);
-    void deleteReply(LikesEntity replyEntity);
+    List<LikesEntity> getLikesByUserId(String userId);
+    void insertLikes(LikesEntity likeEntity);
+    void deleteLikes(LikesEntity likeEntity);
 
 }

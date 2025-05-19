@@ -39,7 +39,7 @@ public class PostKafkaProducerManager {
             if(jsonDTO != null){
                 log.error("Kafka Producer fail", e);
 
-                postDLQManager.sendToDLQ(topicKey, eventType, jsonDTO);
+                postDLQManager.sendToDLQ(TopicKey.valueOf(topicKey + "DLQ"), eventType, jsonDTO);
 
             }else{
                 log.error("Producer DTO to json Fail", e);

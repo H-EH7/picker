@@ -4,6 +4,21 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="picker.picker_backend.post.likes.mapper.LikesMapper">
-    <select id="getLikes" parameterType="long" resultType="picker.picker_backend.post.likes.model.entity.LikesEntity">
+    <select id="getLikesByUserId" parameterType="string" resultType="picker.picker_backend.post.likes.model.entity.LikesEntity">
+        SELECT * FROM picker_db.post_likes
+        WHERE user_id = #{userId};
     </select>
+
+    <insert id="insertLikes" parameterType="picker.picker_backend.post.likes.model.entity.LikesEntity">
+        INSERT INTO picker_db.post_likes
+        (post_id, user_id)
+        VALUES
+        (#{postId}, #{userId});
+    </insert>
+
+    <delete id="deleteLikes" parameterType="picker.picker_backend.post.likes.model.entity.LikesEntity">
+        DELETE FROM picker_db.post_likes
+        WHERE post_id = #{postId}
+        AND user_id = #{userId};
+    </delete>
 </mapper>
