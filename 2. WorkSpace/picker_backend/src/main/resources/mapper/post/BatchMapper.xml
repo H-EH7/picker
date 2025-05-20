@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="picker.picker_backend.post.mapper.PostMapper">
+    <update id="updateViewCountBatch" parameterType="picker.picker_backend.post.model.entity.PostEntity">
+        UPDATE picker_db.post
+        SET view_count = view_count + #{viewCount}
+        WHERE post_id = #{postId}
+    </update>
+
+    <select id="getViewLikesCounts" resultType="picker.picker_backend.post.model.entity.PostEntity">
+        WITH unified_top AS (
+        ( SELECT post_id, view_count AS a_data, NULL AS b_data, NULL AS c_data
+          FROM post
+          ORDER BY view_count DESC
+          LIMIT 1000 )
+        UNION ALL
+        ( SELECT post_id, NULL, NULL, COUNT(*) AS c_data
+          FROM post_likes
+          GROUP BY post_id
+          ORDER BY c_data DESC
+           LIMIT 1000 ) )
+        SELECT post_id, MAX(a_data) AS view_count, MAX(c_data) AS likes_count
+        FROM unified_top
+        GROUP BY post_id;
+    </select>
+
+    <insert id="insertPostAggregate" parameterType="picker.picker_backend.post.model.entity.PostEntity">
+        INSERT INTO picker_db.post_aggregate(post_id, like_count, view_count, reply_count)
+        VALUES (#{postId}, #{likeCount}, #{viewCount}, #{replyCount})
+    </insert>
+    <delete id="deletePopPost">
+        DELETE FROM picker_db.post_aggregate
+    </delete>
+</mapper>

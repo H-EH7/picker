@@ -47,9 +47,4 @@
         AND user_id=#{userId}
     </delete>
 
-    <update id="updateViewCountBatch" parameterType="picker.picker_backend.post.model.entity.PostEntity">
-            UPDATE picker_db.post
-            SET view_count = view_count + #{viewCount}
-            WHERE post_id = #{postId}
-    </update>
 </mapper>

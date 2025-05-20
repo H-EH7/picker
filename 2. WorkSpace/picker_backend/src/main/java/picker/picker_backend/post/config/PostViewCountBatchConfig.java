@@ -5,21 +5,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 import picker.picker_backend.post.component.manger.PostRedisViewCountManager;
-import picker.picker_backend.post.mapper.PostMapper;
 import picker.picker_backend.post.model.entity.PostEntity;
+import picker.picker_backend.post.schedular.mapper.BatchMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -32,22 +33,22 @@ public class PostViewCountBatchConfig {
 
     private final PostRedisViewCountManager postRedisViewCountManager;
     private final SqlSessionFactory sqlSessionFactory;
-    private final JobBuilderFactory jobBuilderFactory;
-    private final StepBuilderFactory stepBuilderFactory;
+    private final JobRepository jobRepository;
 
     private static final int BATCH_SIZE = 1000;
 
     @Bean
     public Job postViewCountJob(Step postViewCountStep){
-        return jobBuilderFactory.get("postViewCountJob").start(postViewCountStep).build();
+        return new JobBuilder("postViewCountJob", jobRepository).start(postViewCountStep).build();
     }
 
     @Bean
     public Step postViewCountStep(ItemReader<PostEntity> redisViewCountReader,
                                   ItemProcessor<PostEntity, PostEntity> processor,
-                                  ItemWriter<PostEntity> mybatisBatchWriter){
-        return stepBuilderFactory.get("postViewCountStep")
-                .<PostEntity, PostEntity>chunk(BATCH_SIZE)
+                                  ItemWriter<PostEntity> mybatisBatchWriter,
+                                  PlatformTransactionManager transactionManager){
+        return new StepBuilder("postViewCountStep", jobRepository)
+                .<PostEntity, PostEntity>chunk(BATCH_SIZE, transactionManager)
                 .reader(redisViewCountReader)
                 .processor(processor)
                 .writer(mybatisBatchWriter)
@@ -72,9 +73,9 @@ public class PostViewCountBatchConfig {
     public ItemWriter<PostEntity> mybatisBatchWriter(){
         return items ->{
             try(SqlSession session = sqlSessionFactory.openSession(ExecutorType.BATCH, false)){
-                PostMapper postMapper = session.getMapper(PostMapper.class);
+                BatchMapper batchMapper = session.getMapper(BatchMapper.class);
                 for(PostEntity post : items){
-                    postMapper.updateViewCountBatch(post);
+                    batchMapper.updateViewCountBatch(post);
                 }
                 session.commit();
             }catch (Exception e){

@@ -3,11 +3,14 @@ package picker.picker_backend.post.component.manger;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @AllArgsConstructor
@@ -19,7 +22,7 @@ public class PostRedisViewCountManager {
 
     @Async("postRedisViewCountExecutor")
     public void setViewCount(long postId) {
-        redisTemplate.opsForHash().put("post:viewcount", String.valueOf(postId), "0");
+        redisTemplate.opsForZSet().add("post:viewcount", String.valueOf(postId), 0);
         postRedisReplyCountManager.setReplyCount(postId);
     }
 
@@ -30,24 +33,53 @@ public class PostRedisViewCountManager {
 
     @Async("postRedisViewCountExecutor")
     public void incrementViewCount(long postId) {
-        redisTemplate.opsForHash().increment("post:viewcount", String.valueOf(postId), 1);
+        redisTemplate.opsForZSet().incrementScore("post:viewcount", String.valueOf(postId), 1);
     }
 
     public Map<Object, Object> getAllPostViewCount() {
-        return redisTemplate.opsForHash().entries("post:viewcount");
+        Map<Object, Object> resultPostViewCount = new LinkedHashMap<>();
+        Set<ZSetOperations.TypedTuple<String>> allPostViewCount=
+                redisTemplate.opsForZSet()
+                        .reverseRangeWithScores("post:viewcount", 0, -1);
+
+        if(allPostViewCount != null){
+            for(ZSetOperations.TypedTuple<String> tuple : allPostViewCount) {
+                resultPostViewCount.put(tuple.getValue(), tuple.getScore());
+            }
+        }
+        return resultPostViewCount;
+    }
+
+    public Map<Object, Object> getTopPostViewCount() {
+        Map<Object, Object> resultPostViewCount = new LinkedHashMap<>();
+        Set<ZSetOperations.TypedTuple<String>> topPostViewCount=
+                redisTemplate.opsForZSet()
+                        .reverseRangeWithScores("post:viewcount", 0, 999);
+
+        if(topPostViewCount != null){
+            for(ZSetOperations.TypedTuple<String> tuple : topPostViewCount) {
+                resultPostViewCount.put(tuple.getValue(), tuple.getScore());
+            }
+        }
+        return resultPostViewCount;
     }
 
     @Async("postRedisViewCountExecutor")
     public void deleteViewCount(long postId){
-        redisTemplate.opsForHash().delete("post:viewcount", String.valueOf(postId));
-        redisTemplate.opsForHash().delete("post:replycount",String.valueOf(postId));
+        redisTemplate.opsForZSet().remove("post:viewcount", String.valueOf(postId));
+        postRedisReplyCountManager.removeReplyCount(postId);
     }
 
     @Async("postRedisViewCountExecutor")
     public void initViewCount(){
-        Map<String, String> updateAllViewCounts = new HashMap<>();
-        redisTemplate.opsForHash().entries("post:viewcount").forEach((key,value)-> updateAllViewCounts.put((String) key, "0"));
+        Set<String> allViewCountsPostId = redisTemplate.opsForZSet().range("post:viewcount", 0,-1);
 
-        redisTemplate.opsForHash().putAll("post:viewcount", updateAllViewCounts);
+        if(allViewCountsPostId != null){
+            for(String viewCountsPostId : allViewCountsPostId){
+                redisTemplate.opsForZSet().add("post:viewcount", viewCountsPostId,0);
+            }
+        }
     }
+
+
 }

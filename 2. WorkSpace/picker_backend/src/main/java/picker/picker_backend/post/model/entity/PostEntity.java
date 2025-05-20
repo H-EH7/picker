@@ -17,4 +17,6 @@ public class PostEntity {
     private String tempId;
     private String filePath;
     private int viewCount;
+    private int replyCount;
+    private int likeCount;
 }

@@ -14,5 +14,4 @@ public interface PostMapper {
     void deletePost(PostEntity postEntity);
     List<PostEntity> getPostLists();
     PostEntity getPost(long postId);
-    void updateViewCountBatch(PostEntity postEntity);
 }
