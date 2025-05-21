@@ -18,5 +18,5 @@ public class PostEntity {
     private String filePath;
     private int viewCount;
     private int replyCount;
-    private int likeCount;
+    private int likesCount;
 }

@@ -3,10 +3,17 @@ logging:
     picker.picker_backend: debug
     org.mybatis.spring: DEBUG
     org.apache.ibatis: DEBUG
+    org.springframework.jdbc.datasource.init.ScriptUtils: DEBUG
+    org.springframework.jdbc.datasource.init.DataSourceInitializer: DEBUG
+
 
 spring:
   application:
     name: picker-backend
+
+  batch:
+    jdbc:
+      initialize-schema: always
 
   datasource:
     url: jdbc:mysql://localhost:3307/picker_db?serverTimezone=UTC&characterEncoding=UTF-8
@@ -15,6 +22,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     initialization-mode: always
     schema: classpath:mapper/test/schema.sql
+
 
   data:
     redis:
@@ -30,6 +38,8 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

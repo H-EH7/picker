@@ -16,7 +16,6 @@ public class PostSchedular {
 
     private final JobLauncher jobLauncher;
     private final Job postViewCountJob;
-    private final Job postPopJob;
     private final PostRedisViewCountManager postRedisViewCountManager;
 
     @Scheduled(cron = "0 0 0 * * ?")
@@ -27,17 +26,15 @@ public class PostSchedular {
         JobExecution executionViewCount = jobLauncher.run(postViewCountJob,jobParameters);
 
         if(executionViewCount.getStatus() == BatchStatus.COMPLETED){
-
-            JobExecution executionPop =  jobLauncher.run(postPopJob, jobParameters);
-
-            if(executionPop.getStatus() == BatchStatus.COMPLETED){
-                postRedisViewCountManager.initViewCount();
-            }
+            postRedisViewCountManager.initViewCount();
         }
     }
 
 
-    
+    @Scheduled(cron = "0 15 * * * ?")
+    private void popPostScoreSchedular(){
 
 
+
+    }
 }

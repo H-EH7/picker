@@ -89,7 +89,7 @@ public class PostViewCountBatchConfig {
             return redisList.entrySet().stream().map(e ->{
                 PostEntity postEntity = new PostEntity();
                 postEntity.setPostId(Long.parseLong(e.getKey().toString()));
-                postEntity.setViewCount(Integer.parseInt(e.getValue().toString()));
+                postEntity.setViewCount((int)Double.parseDouble(e.getValue().toString()));
                 return postEntity;
             }).toList();
     }

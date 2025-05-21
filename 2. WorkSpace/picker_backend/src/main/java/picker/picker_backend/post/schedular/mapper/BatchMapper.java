@@ -8,8 +8,6 @@ import java.util.List;
 @Mapper
 public interface BatchMapper {
     void updateViewCountBatch(PostEntity postEntity);
-    List<PostEntity> getViewLikesCounts();
-    void insertPostAggregate(PostEntity postEntity);
-    void deletePopPost();
+    List<PostEntity> getPopPost();
 
 }
