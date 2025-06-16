@@ -1,8 +1,7 @@
-package picker.picker_backend.Auth.config;
+package picker.picker_backend.Auth.component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Component
-public class JWTconfig {
+public class JWTmanager {
 
     private final SecretKey secretKey;
 
@@ -23,7 +22,7 @@ public class JWTconfig {
     @Value("${jwt.refresh.expiration}")
     private long refreshExpiration;
 
-    public JWTconfig(@Value("${jwt.secret}") String secret) {
+    public JWTmanager(@Value("${jwt.secret}") String secret) {
         // Base64 디코딩하여 SecretKey 생성
         this.secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
     }

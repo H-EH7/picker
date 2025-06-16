@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import picker.picker_backend.Auth.config.JWTconfig;
+import picker.picker_backend.Auth.component.JWTmanager;
 import picker.picker_backend.Auth.service.AuthService;
 
 import java.util.HashMap;
@@ -17,7 +17,7 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
     @Autowired
-    private JWTconfig JWTconfig;
+    private JWTmanager JWTmanager;
 
     @Autowired
     private AuthService authService;
@@ -27,8 +27,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestParam String username) {
-        String accessToken = JWTconfig.generateAccessToken(username);
-        String refreshToken = JWTconfig.generateRefreshToken(username);
+        String accessToken = JWTmanager.generateAccessToken(username);
+        String refreshToken = JWTmanager.generateRefreshToken(username);
 
         // Redis에 토큰 저장
         authService.saveAccessToken(username, accessToken);
@@ -46,18 +46,18 @@ public class AuthController {
     // 토큰 갱신
     @PostMapping("/refresh")
     public ResponseEntity<Map<String, String>> refreshToken(@RequestParam String refreshToken) {//HttpServlet으로?
-        if (!JWTconfig.validateToken(refreshToken) || !"refresh".equals(JWTconfig.getTokenType(refreshToken))) {
+        if (!JWTmanager.validateToken(refreshToken) || !"refresh".equals(JWTmanager.getTokenType(refreshToken))) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired refresh token"));
         }
 
-        String username = JWTconfig.getUsernameFromToken(refreshToken);
+        String username = JWTmanager.getUsernameFromToken(refreshToken);
         String storedRefreshToken = authService.getToken("refresh:" + username);
 
         if (!refreshToken.equals(storedRefreshToken)) {
             return ResponseEntity.status(401).body(Map.of("error", "Refresh token mismatch"));
         }
 
-        String newAccessToken = JWTconfig.generateAccessToken(username);
+        String newAccessToken = JWTmanager.generateAccessToken(username);
         authService.saveAccessToken(username, newAccessToken);
 
         kafkaTemplate.send("auth-events", "Token refreshed for user: " + username);
